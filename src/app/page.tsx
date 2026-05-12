@@ -1,704 +1,551 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import {
+  CarMascot, CloudDoodle, SunDoodle, StarDoodle, BlobDoodle,
+  SquiggleDoodle, ArrowDoodle, PinDoodle, CoinDoodle, HeartDoodle,
+  SkateDoodle, ChatDoodle, PaperPlane, FriendMascot, RoadPath,
+} from "@/components/doodles";
 
-export default function Home() {
-  const bubbleLayerRef = useRef<HTMLDivElement | null>(null);
+const Nav = () => (
+  <nav data-testid="nav" className="relative z-40 mx-auto max-w-7xl px-6 pt-6 flex items-center justify-between">
+    <a href="#" className="flex items-center gap-3" data-testid="logo">
+      <span className="relative w-12 h-12 grid place-items-center rounded-full border-[2.5px] border-ink bg-sun" style={{ boxShadow: "3px 3px 0 #1B1B1F" }}>
+        <svg viewBox="0 0 40 40" className="w-7 h-7">
+          <path d="M6,26 C 6,20 10,16 16,16 L 24,16 C 30,16 34,20 34,26" stroke="#1B1B1F" strokeWidth="3" strokeLinecap="round" fill="none"/>
+          <circle cx="13" cy="28" r="3.5" fill="#1B1B1F"/>
+          <circle cx="27" cy="28" r="3.5" fill="#1B1B1F"/>
+          <path d="M14,16 L 18,10 L 22,10 L 26,16" stroke="#1B1B1F" strokeWidth="2.5" strokeLinejoin="round" fill="#FF5A36"/>
+        </svg>
+      </span>
+      <span className="font-marker text-2xl tracking-wide">Campus<span className="text-tomato">Rides</span></span>
+    </a>
+    <div className="hidden md:flex items-center gap-8 font-hand text-xl">
+      <a href="#how" className="hover:text-tomato transition-colors" data-testid="nav-how">How it works</a>
+      <a href="#why" className="hover:text-tomato transition-colors" data-testid="nav-why">Why us</a>
+      <a href="#voices" className="hover:text-tomato transition-colors" data-testid="nav-voices">Voices</a>
+      <a href="#faq" className="hover:text-tomato transition-colors" data-testid="nav-faq">FAQ</a>
+    </div>
+    <Link href="/auth" data-testid="nav-cta" className="sketch-btn sketch-btn--tomato !py-2 !px-4 !text-base">
+      Get Started <span aria-hidden>→</span>
+    </Link>
+  </nav>
+);
 
-  useEffect(() => {
-    const layer = bubbleLayerRef.current;
-    if (!layer) return;
+const Hero = () => {
+  const { scrollY } = useScroll();
+  const yCloud = useTransform(scrollY, [0, 600], [0, -120]);
+  const ySun = useTransform(scrollY, [0, 600], [0, -60]);
+  const rotateCar = useTransform(scrollY, [0, 600], [0, -6]);
 
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (prefersReduced.matches) return;
-
-    let lastTime = 0;
-    const handleMove = (event: MouseEvent) => {
-      const now = Date.now();
-      if (now - lastTime < 60) return;
-      lastTime = now;
-
-      const bubble = document.createElement("span");
-      bubble.className = "cursor-bubble";
-      bubble.style.setProperty("--x", `${event.clientX}px`);
-      bubble.style.setProperty("--y", `${event.clientY}px`);
-      layer.appendChild(bubble);
-
-      bubble.addEventListener("animationend", () => {
-        bubble.remove();
-      });
-    };
-
-    window.addEventListener("mousemove", handleMove);
-    return () => window.removeEventListener("mousemove", handleMove);
-  }, []);
   return (
-    <div className="grain paper sketch-body">
-      <div ref={bubbleLayerRef} className="cursor-bubbles" aria-hidden="true" />
-      <header className="hero">
-        <div className="doodle cloud cloud-left float-a" aria-hidden="true">
-          <svg viewBox="0 0 140 80" fill="none">
-            <path
-              d="M20,60 C 4,60 4,38 22,36 C 26,18 50,16 56,30 C 64,18 90,20 92,36 C 112,34 122,56 104,62 C 100,72 30,72 20,60 Z"
-              fill="#fff"
-              stroke="#1B1B1F"
-              strokeWidth="3"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M30,52 C 36,56 44,54 48,50"
-              stroke="#1B1B1F"
-              strokeWidth="2"
-              strokeLinecap="round"
-              fill="none"
-            />
-          </svg>
-        </div>
-        <div className="doodle cloud cloud-right float-b" aria-hidden="true">
-          <svg viewBox="0 0 140 80" fill="none">
-            <path
-              d="M20,60 C 4,60 4,38 22,36 C 26,18 50,16 56,30 C 64,18 90,20 92,36 C 112,34 122,56 104,62 C 100,72 30,72 20,60 Z"
-              fill="#fff"
-              stroke="#1B1B1F"
-              strokeWidth="3"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M30,52 C 36,56 44,54 48,50"
-              stroke="#1B1B1F"
-              strokeWidth="2"
-              strokeLinecap="round"
-              fill="none"
-            />
-          </svg>
-        </div>
-        <div className="doodle sun float-c" aria-hidden="true">
-          <svg viewBox="0 0 120 120" fill="none">
-            <circle cx="60" cy="60" r="22" fill="#FFD23F" stroke="#1B1B1F" strokeWidth="3.5" />
-            <line x1="92" y1="60" x2="110" y2="60" stroke="#1B1B1F" strokeWidth="3.5" strokeLinecap="round" />
-            <line x1="60" y1="92" x2="60" y2="110" stroke="#1B1B1F" strokeWidth="3.5" strokeLinecap="round" />
-            <line x1="28" y1="60" x2="10" y2="60" stroke="#1B1B1F" strokeWidth="3.5" strokeLinecap="round" />
-            <line x1="60" y1="28" x2="60" y2="10" stroke="#1B1B1F" strokeWidth="3.5" strokeLinecap="round" />
-            <line x1="82.6" y1="82.6" x2="95.3" y2="95.3" stroke="#1B1B1F" strokeWidth="3.5" strokeLinecap="round" />
-            <line x1="37.3" y1="37.3" x2="24.6" y2="24.6" stroke="#1B1B1F" strokeWidth="3.5" strokeLinecap="round" />
-            <circle cx="54" cy="58" r="1.6" fill="#1B1B1F" />
-            <circle cx="66" cy="58" r="1.6" fill="#1B1B1F" />
-            <path d="M53,66 Q60,72 67,66" stroke="#1B1B1F" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-          </svg>
-        </div>
-        <div className="doodle star star-left float-c" aria-hidden="true">
-          <svg viewBox="0 0 60 60" fill="none">
-            <path
-              d="M30,5 L 36,22 L 54,24 L 40,36 L 44,54 L 30,44 L 16,54 L 20,36 L 6,24 L 24,22 Z"
-              fill="#FFD23F"
-              stroke="#1B1B1F"
-              strokeWidth="2.5"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-        <div className="doodle star star-right float-a" aria-hidden="true">
-          <svg viewBox="0 0 60 60" fill="none">
-            <path
-              d="M30,5 L 36,22 L 54,24 L 40,36 L 44,54 L 30,44 L 16,54 L 20,36 L 6,24 L 24,22 Z"
-              fill="#9B5DE5"
-              stroke="#1B1B1F"
-              strokeWidth="2.5"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </div>
-        <div className="doodle scribble-line" aria-hidden="true">
-          <svg viewBox="0 0 120 30" fill="none">
-            <path
-              d="M2,15 C 16,2 28,28 42,15 C 56,2 68,28 82,15 C 96,2 108,28 118,15"
-              stroke="#FF5A36"
-              strokeWidth="3.5"
-              strokeLinecap="round"
-              fill="none"
-            />
-          </svg>
-        </div>
+    <header className="relative overflow-hidden pt-6 pb-28">
+      <motion.div style={{ y: yCloud }} className="absolute top-20 left-[6%] w-28 float-a">
+        <CloudDoodle />
+      </motion.div>
+      <motion.div style={{ y: yCloud }} className="absolute top-40 right-[14%] w-36 float-b">
+        <CloudDoodle />
+      </motion.div>
+      <motion.div style={{ y: ySun }} className="absolute top-10 right-[6%] w-24 float-c">
+        <SunDoodle />
+      </motion.div>
+      <div className="absolute top-[42%] left-[3%] w-12 float-c">
+        <StarDoodle color="#FFD23F" />
+      </div>
+      <div className="absolute top-[58%] right-[5%] w-14 float-a">
+        <StarDoodle color="#9B5DE5" />
+      </div>
+      <div className="absolute top-[18%] right-[40%] w-10 opacity-80">
+        <SquiggleDoodle color="#FF5A36" />
+      </div>
 
-        <nav className="nav">
-          <a className="brand" href="#">
-            <span className="brand-badge">CR</span>
-            <span className="brand-name">
-              Campus<span className="text-tomato">Rides</span>
+      <Nav />
+
+      <div className="relative mx-auto max-w-7xl px-6 pt-14 md:pt-20 grid md:grid-cols-12 gap-8 items-center">
+        <div className="md:col-span-7">
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="font-scribble text-2xl text-tomato"
+            data-testid="hero-eyebrow"
+          >
+            ~ for students, by students ~
+          </motion.p>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mt-3 font-marker leading-[1] text-[clamp(2rem,5.5vw,5rem)] whitespace-nowrap"
+            data-testid="hero-title"
+          >
+            Book your <span className="scribble">ride</span>.<br />
+            Catch your <span className="marker">Bus/Train</span>.<br />
+            Never miss <span className="text-tomato">home</span>.
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, duration: 0.5 }}
+            className="mt-7 font-body text-2xl max-w-xl text-ink/80"
+            data-testid="hero-subtitle"
+          >
+            CampusRide is the little app that saves big panic. Festival season, end of semester,
+            or just a random Tuesday evening — open the app, tap your bus stop, and an auto finds
+            you in minutes. No haggling, no waiting at the gate, no missed trains.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="mt-9 flex flex-wrap gap-4 items-center"
+          >
+            <a href="#join" data-testid="hero-cta-primary" className="sketch-btn sketch-btn--tomato">
+              Find a ride <ArrowDoodle className="w-8 h-5" color="#fff" />
+            </a>
+            <a href="#how" data-testid="hero-cta-secondary" className="sketch-btn sketch-btn--sun">
+              How it works
+            </a>
+            <span className="font-scribble text-xl text-ink/70 ml-2 hidden sm:inline">
+              ↖ start here, friend
             </span>
-          </a>
-          <div className="nav-links">
-            <a href="#how">How it works</a>
-            <a href="#why">Why us</a>
-            <a href="#voices">Voices</a>
-            <a href="#faq">FAQ</a>
-          </div>
-          <a href="#join" className="sketch-btn sketch-btn--tomato sketch-btn--small">
-            Hop in <span aria-hidden="true">-&gt;</span>
-          </a>
-        </nav>
+          </motion.div>
 
-        <div className="hero-grid">
-          <div className="hero-copy">
-            <p className="font-scribble kicker">~ for students, by students ~</p>
-            <h1 className="font-marker hero-title">
-              SHARE THE <span className="scribble">ROAD</span>.
-              <br />
-              SPLIT THE <span className="marker">GAS</span>.
-              <br />
-              MAKE A <span className="text-tomato">FRIEND</span>.
-            </h1>
-            <p className="font-body hero-subtitle">
-              Campus Rides is a doodly little carpool for college kids
-              <br />
-              - find a lift to lecture, home for the weekend, or that
-              <br />
-              gig three towns over. No taxis. No surge. Just
-              <br />
-              classmates.
-            </p>
-            <div className="hero-actions">
-              <a href="#join" className="sketch-btn sketch-btn--tomato btn-primary">
-                Find a ride
-                <svg viewBox="0 0 140 80" className="btn-arrow" fill="none" aria-hidden="true">
-                  <path d="M6,40 C 30,12 70,68 110,30" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" fill="none" />
-                  <path d="M96,22 L 112,28 L 106,44" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                </svg>
-              </a>
-              <a href="#how" className="sketch-btn sketch-btn--sun">
-                How it works
-              </a>
-              <span className="font-scribble hero-hint">&lt;- start here, friend</span>
-            </div>
-            <div className="hero-stats">
-              <div className="stat">
-                <span className="font-marker stat-value">12k+</span>
-                <span className="font-hand stat-label">students lifted</span>
-              </div>
-              <div className="stat">
-                <span className="font-marker stat-value">Rs 38L</span>
-                <span className="font-hand stat-label">petrol saved</span>
-              </div>
-              <div className="stat">
-                <span className="font-marker stat-value">84</span>
-                <span className="font-hand stat-label">campuses</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="hero-visual">
-            <div className="hero-blob" aria-hidden="true">
-              <svg viewBox="0 0 200 200" fill="none">
-                <path
-                  d="M44,72 C 60,28 142,18 168,62 C 196,108 162,168 116,176 C 64,184 18,148 28,108 C 32,92 36,80 44,72 Z"
-                  fill="#FFB4A2"
-                  stroke="#1B1B1F"
-                  strokeWidth="3"
-                />
-              </svg>
-            </div>
-            <div className="car-wrap mascot-wobble">
-              <svg viewBox="0 0 420 280" className="hero-car" fill="none">
-                <ellipse cx="210" cy="248" rx="160" ry="12" fill="#1B1B1F" opacity="0.15" />
-                <path
-                  d="M40,200 C 40,160 70,140 110,135 L 150,100 C 170,80 200,76 230,76 L 290,76 C 320,76 340,90 358,118 L 376,148 C 392,152 402,168 402,188 L 402,210 C 402,222 392,232 380,232 L 360,232"
-                  stroke="#1B1B1F"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="#FFD23F"
-                />
-                <path d="M40,232 L 60,232" stroke="#1B1B1F" strokeWidth="5" strokeLinecap="round" />
-                <path d="M120,232 L 300,232" stroke="#1B1B1F" strokeWidth="5" strokeLinecap="round" />
-                <path d="M150,116 L 180,90 L 246,90 L 268,116 Z" fill="#5BC0EB" stroke="#1B1B1F" strokeWidth="4" strokeLinejoin="round" />
-                <path d="M276,116 L 286,92 L 322,92 C 332,92 340,98 346,108 L 352,116 Z" fill="#5BC0EB" stroke="#1B1B1F" strokeWidth="4" strokeLinejoin="round" />
-                <path d="M210,90 L 210,116" stroke="#1B1B1F" strokeWidth="4" />
-                <circle cx="386" cy="178" r="8" fill="#fff" stroke="#1B1B1F" strokeWidth="3" />
-                <path d="M196,150 L 220,150" stroke="#1B1B1F" strokeWidth="4" strokeLinecap="round" />
-                <g>
-                  <circle cx="100" cy="232" r="28" fill="#1B1B1F" />
-                  <circle cx="100" cy="232" r="14" fill="#FDF6E3" stroke="#1B1B1F" strokeWidth="3" className="wheel-spin" />
-                  <path d="M100,222 L 100,242 M90,232 L 110,232" stroke="#1B1B1F" strokeWidth="3" />
-                </g>
-                <g>
-                  <circle cx="330" cy="232" r="28" fill="#1B1B1F" />
-                  <circle cx="330" cy="232" r="14" fill="#FDF6E3" stroke="#1B1B1F" strokeWidth="3" className="wheel-spin" />
-                  <path d="M330,222 L 330,242 M320,232 L 340,232" stroke="#1B1B1F" strokeWidth="3" />
-                </g>
-                <circle cx="210" cy="108" r="11" fill="#FFB4A2" stroke="#1B1B1F" strokeWidth="2.5" />
-                <circle cx="207" cy="107" r="1.3" fill="#1B1B1F" />
-                <circle cx="213" cy="107" r="1.3" fill="#1B1B1F" />
-                <path d="M205,112 Q 210,116 215,112" stroke="#1B1B1F" strokeWidth="2" strokeLinecap="round" fill="none" />
-                <path d="M0,150 L 30,150" stroke="#1B1B1F" strokeWidth="3" strokeLinecap="round" />
-                <path d="M-4,178 L 26,178" stroke="#1B1B1F" strokeWidth="3" strokeLinecap="round" />
-                <path d="M6,206 L 34,206" stroke="#1B1B1F" strokeWidth="3" strokeLinecap="round" />
-              </svg>
-            </div>
-            <div className="hero-note">
-              "Saved Rs 400 + made 3 friends"
-              <span>- Riya, 2nd yr</span>
-            </div>
-            <div className="doodle coin float-b" aria-hidden="true">
-              <svg viewBox="0 0 80 80" fill="none">
-                <ellipse cx="40" cy="44" rx="30" ry="28" fill="#FFD23F" stroke="#1B1B1F" strokeWidth="3" />
-                <ellipse cx="40" cy="40" rx="30" ry="28" fill="#FFD23F" stroke="#1B1B1F" strokeWidth="3" />
-                <text x="40" y="48" textAnchor="middle" className="coin-text">Rs</text>
-              </svg>
-            </div>
-            <div className="doodle heart float-c" aria-hidden="true">
-              <svg viewBox="0 0 80 76" fill="none">
-                <path
-                  d="M40,68 C 8,46 8,18 24,12 C 32,8 38,14 40,20 C 42,14 48,8 56,12 C 72,18 72,46 40,68 Z"
-                  fill="#FF5A36"
-                  stroke="#1B1B1F"
-                  strokeWidth="3"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
+          <div className="mt-12 flex flex-wrap gap-8" data-testid="hero-stats">
+            {[
+              { n: "12k+", l: "students lifted" },
+              { n: "₹38L", l: "petrol saved" },
+              { n: "84", l: "campuses" },
+            ].map((s, i) => (
+              <motion.div
+                key={s.l}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 + i * 0.1 }}
+                className="flex items-center gap-3"
+              >
+                <span className="font-marker text-4xl">{s.n}</span>
+                <span className="font-hand text-lg text-ink/70 leading-tight max-w-[110px]">{s.l}</span>
+              </motion.div>
+            ))}
           </div>
         </div>
 
-        <div className="hero-path">
-          <svg viewBox="0 0 1400 220" fill="none" preserveAspectRatio="none">
-            <path
-              d="M0,170 C 200,40 380,260 580,140 C 760,30 940,250 1140,150 C 1280,90 1360,180 1400,140"
-              stroke="#1B1B1F"
-              strokeWidth="5"
-              strokeLinecap="round"
-              strokeDasharray="14 14"
-              fill="none"
-              className="draw-path draw-path--slow"
-            />
-          </svg>
-        </div>
-      </header>
-
-      <div className="marquee" aria-label="Popular ride types">
-        <div className="marq-track">
-          <span>Mid-sem break?</span>
-          <span>Airport runs</span>
-          <span>Hostel &lt;-&gt; Home</span>
-          <span>Friday gigs</span>
-          <span>Match-day pile-ons</span>
-          <span>Library raids @ 2am</span>
-          <span>Bestie's wedding</span>
-          <span>Mid-sem break?</span>
-          <span>Airport runs</span>
-          <span>Hostel &lt;-&gt; Home</span>
-          <span>Friday gigs</span>
-          <span>Match-day pile-ons</span>
-          <span>Library raids @ 2am</span>
-          <span>Bestie's wedding</span>
+        <div className="md:col-span-5 relative">
+          <motion.div
+            style={{ rotate: rotateCar }}
+            initial={{ opacity: 0, x: 60 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2, duration: 0.7, type: "spring" as const }}
+            className="relative"
+          >
+            <div className="absolute -inset-6 -z-10">
+              <BlobDoodle className="w-full h-full" color="#FFB4A2" />
+            </div>
+            <div className="mascot-wobble">
+              <CarMascot className="w-full" />
+            </div>
+            <motion.div
+              initial={{ opacity: 0, rotate: -12, y: 20 }}
+              animate={{ opacity: 1, rotate: -8, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="absolute -bottom-2 -left-4 bg-cream border-[2.5px] border-ink p-3 font-hand text-lg max-w-[180px]"
+              style={{ boxShadow: "4px 4px 0 #1B1B1F" }}
+              data-testid="hero-sticky"
+            >
+              &quot;Saved ₹400 + made 3 friends&quot; <br />
+              <span className="font-scribble text-tomato text-xl">— Riya, 2nd yr</span>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.4 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.0, type: "spring" as const }}
+              className="absolute -top-4 -right-2 w-20 float-b"
+            >
+              <CoinDoodle />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.4 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 1.15, type: "spring" as const }}
+              className="absolute top-10 -left-10 w-16 float-c"
+            >
+              <HeartDoodle />
+            </motion.div>
+          </motion.div>
         </div>
       </div>
 
-      <section id="how" className="section">
-        <div className="container">
-          <div className="section-head">
-            <div>
-              <p className="font-scribble kicker text-plum">three little steps</p>
-              <h2 className="font-marker section-title">
-                How it <span className="scribble">works</span>
-              </h2>
-            </div>
-            <p className="font-body section-note">
-              Built so chaotic college calendars do not break it. (We tested it
-              during finals week.)
-            </p>
-          </div>
-          <div className="card-grid">
-            <article className="sketch-card rotate-a">
-              <span className="sticky-tape">Step 01</span>
-              <div className="card-title">
-                <h3 className="font-marker">Doodle a route</h3>
-                <svg viewBox="0 0 60 80" className="icon" fill="none">
-                  <path
-                    d="M30,4 C 14,4 6,18 8,32 C 10,46 30,72 30,72 C 30,72 50,46 52,32 C 54,18 46,4 30,4 Z"
-                    fill="#FF5A36"
-                    stroke="#1B1B1F"
-                    strokeWidth="3"
-                    strokeLinejoin="round"
-                  />
-                  <circle cx="30" cy="30" r="8" fill="#FDF6E3" stroke="#1B1B1F" strokeWidth="2.5" />
-                </svg>
-              </div>
-              <p className="font-body">
-                Type where you are going. Or tap the map. The car listens, we
-                promise.
-              </p>
-            </article>
-            <article className="sketch-card rotate-b">
-              <span className="sticky-tape tape-sky">Step 02</span>
-              <div className="card-title">
-                <h3 className="font-marker">Match a classmate</h3>
-                <svg viewBox="0 0 120 100" className="icon" fill="none">
-                  <path
-                    d="M14,18 C 14,10 22,6 30,6 L 92,6 C 102,6 110,12 110,22 L 110,58 C 110,68 102,74 92,74 L 50,74 L 32,92 L 36,74 L 30,74 C 22,74 14,68 14,58 Z"
-                    fill="#fff"
-                    stroke="#1B1B1F"
-                    strokeWidth="3"
-                    strokeLinejoin="round"
-                  />
-                  <circle cx="40" cy="40" r="3" fill="#1B1B1F" />
-                  <circle cx="60" cy="40" r="3" fill="#1B1B1F" />
-                  <circle cx="80" cy="40" r="3" fill="#1B1B1F" />
-                </svg>
-              </div>
-              <p className="font-body">
-                We find someone on the same path. Verified by college email - no
-                randos.
-              </p>
-            </article>
-            <article className="sketch-card rotate-a">
-              <span className="sticky-tape tape-leaf">Step 03</span>
-              <div className="card-title">
-                <h3 className="font-marker">Split and roll out</h3>
-                <svg viewBox="0 0 80 80" className="icon" fill="none">
-                  <ellipse cx="40" cy="44" rx="30" ry="28" fill="#FFD23F" stroke="#1B1B1F" strokeWidth="3" />
-                  <ellipse cx="40" cy="40" rx="30" ry="28" fill="#FFD23F" stroke="#1B1B1F" strokeWidth="3" />
-                  <text x="40" y="48" textAnchor="middle" className="coin-text">Rs</text>
-                </svg>
-              </div>
-              <p className="font-body">
-                Petrol split fairly. Pay in-app. High-five at drop-off (optional
-                but encouraged).
-              </p>
-            </article>
-          </div>
-        </div>
-      </section>
+      <div className="relative mt-10 mx-auto max-w-[1500px] px-2">
+        <RoadPath className="w-full h-40" />
+      </div>
+    </header>
+  );
+};
 
-      <section id="why" className="section paper-soft">
-        <div className="container">
-          <div className="section-center">
-            <p className="font-scribble kicker text-tomato">six reasons (we counted)</p>
-            <h2 className="font-marker section-title">
-              Why students <span className="marker">love</span> us
-            </h2>
-            <p className="font-body section-note">
-              We did not build a taxi app. We built the in-between space where
-              strangers become study buddies.
-            </p>
-          </div>
-          <div className="card-grid">
-            <article className="sketch-card">
-              <div className="card-title">
-                <div className="icon-badge peach">
-                  <svg viewBox="0 0 80 76" className="icon" fill="none">
-                    <path
-                      d="M40,68 C 8,46 8,18 24,12 C 32,8 38,14 40,20 C 42,14 48,8 56,12 C 72,18 72,46 40,68 Z"
-                      fill="#FF5A36"
-                      stroke="#1B1B1F"
-                      strokeWidth="3"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-                <h3 className="font-marker">Verified classmates</h3>
-              </div>
-              <p className="font-body">College email required. Real people, real campuses.</p>
-            </article>
-            <article className="sketch-card">
-              <div className="card-title">
-                <div className="icon-badge sun">
-                  <svg viewBox="0 0 80 80" className="icon" fill="none">
-                    <ellipse cx="40" cy="44" rx="30" ry="28" fill="#FFD23F" stroke="#1B1B1F" strokeWidth="3" />
-                    <ellipse cx="40" cy="40" rx="30" ry="28" fill="#FFD23F" stroke="#1B1B1F" strokeWidth="3" />
-                    <text x="40" y="48" textAnchor="middle" className="coin-text">Rs</text>
-                  </svg>
-                </div>
-                <h3 className="font-marker">Fair-share petrol</h3>
-              </div>
-              <p className="font-body">Auto-split by distance. No awkward late-night math.</p>
-            </article>
-            <article className="sketch-card">
-              <div className="card-title">
-                <div className="icon-badge sky">
-                  <svg viewBox="0 0 120 100" className="icon" fill="none">
-                    <path d="M10,50 L 110,12 L 78,90 L 62,62 Z" fill="#5BC0EB" stroke="#1B1B1F" strokeWidth="3" strokeLinejoin="round" />
-                    <path d="M62,62 L 110,12" stroke="#1B1B1F" strokeWidth="3" />
-                  </svg>
-                </div>
-                <h3 className="font-marker">Doodle-fast booking</h3>
-              </div>
-              <p className="font-body">Tap, swipe, ride. Most matches happen in under 4 minutes.</p>
-            </article>
-            <article className="sketch-card">
-              <div className="card-title">
-                <div className="icon-badge leaf">
-                  <svg viewBox="0 0 120 100" className="icon" fill="none">
-                    <path
-                      d="M14,18 C 14,10 22,6 30,6 L 92,6 C 102,6 110,12 110,22 L 110,58 C 110,68 102,74 92,74 L 50,74 L 32,92 L 36,74 L 30,74 C 22,74 14,68 14,58 Z"
-                      fill="#fff"
-                      stroke="#1B1B1F"
-                      strokeWidth="3"
-                      strokeLinejoin="round"
-                    />
-                    <circle cx="40" cy="40" r="3" fill="#1B1B1F" />
-                    <circle cx="60" cy="40" r="3" fill="#1B1B1F" />
-                    <circle cx="80" cy="40" r="3" fill="#1B1B1F" />
-                  </svg>
-                </div>
-                <h3 className="font-marker">Safe ratings</h3>
-              </div>
-              <p className="font-body">Two-way reviews plus SOS share-trip. Mom-approved.</p>
-            </article>
-            <article className="sketch-card">
-              <div className="card-title">
-                <div className="icon-badge plum">
-                  <svg viewBox="0 0 120 120" className="icon" fill="none">
-                    <circle cx="60" cy="60" r="22" fill="#FFD23F" stroke="#1B1B1F" strokeWidth="3.5" />
-                    <line x1="92" y1="60" x2="110" y2="60" stroke="#1B1B1F" strokeWidth="3.5" strokeLinecap="round" />
-                    <line x1="60" y1="92" x2="60" y2="110" stroke="#1B1B1F" strokeWidth="3.5" strokeLinecap="round" />
-                    <line x1="28" y1="60" x2="10" y2="60" stroke="#1B1B1F" strokeWidth="3.5" strokeLinecap="round" />
-                    <line x1="60" y1="28" x2="60" y2="10" stroke="#1B1B1F" strokeWidth="3.5" strokeLinecap="round" />
-                    <circle cx="54" cy="58" r="1.6" fill="#1B1B1F" />
-                    <circle cx="66" cy="58" r="1.6" fill="#1B1B1F" />
-                    <path d="M53,66 Q60,72 67,66" stroke="#1B1B1F" strokeWidth="2.2" fill="none" strokeLinecap="round" />
-                  </svg>
-                </div>
-                <h3 className="font-marker">Greener footprint</h3>
-              </div>
-              <p className="font-body">Each shared ride means one less car. Sad polar bears stay happy.</p>
-            </article>
-            <article className="sketch-card">
-              <div className="card-title">
-                <div className="icon-badge tomato">
-                  <svg viewBox="0 0 160 100" className="icon" fill="none">
-                    <path d="M18,52 L 142,52" stroke="#1B1B1F" strokeWidth="6" strokeLinecap="round" />
-                    <path d="M18,52 C 22,38 138,38 142,52" stroke="#7BC950" strokeWidth="8" strokeLinecap="round" fill="none" />
-                    <circle cx="38" cy="74" r="12" fill="#1B1B1F" />
-                    <circle cx="122" cy="74" r="12" fill="#1B1B1F" />
-                    <circle cx="38" cy="74" r="5" fill="#FDF6E3" />
-                    <circle cx="122" cy="74" r="5" fill="#FDF6E3" />
-                  </svg>
-                </div>
-                <h3 className="font-marker">Late-night-friendly</h3>
-              </div>
-              <p className="font-body">Library closes at 2? We have a 2:01 lift home.</p>
-            </article>
-          </div>
-        </div>
-      </section>
+const Marquee = () => {
+  const items = ["Mid-sem break? ⇢", "Airport runs", "Hostel ↔ Home", "Friday gigs", "Match-day pile-ons", "Library raids @ 2am", "Bestie's wedding ↗"];
+  const row = [...items, ...items];
+  return (
+    <div className="relative bg-ink text-cream py-5 border-y-[3px] border-ink overflow-hidden" data-testid="marquee">
+      <div className="flex gap-12 whitespace-nowrap w-[200%] animate-[marq_32s_linear_infinite]">
+        {row.map((t, i) => (
+          <span key={i} className="font-marker text-2xl tracking-wide flex items-center gap-12">
+            <StarDoodle className="inline-block w-7 h-7" color="#FFD23F" />
+            {t}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
 
-      <section id="voices" className="section">
-        <div className="container">
-          <div className="section-center">
-            <p className="font-scribble kicker text-leaf">notes from the back-seat</p>
-            <h2 className="font-marker section-title">
-              What riders are <span className="scribble">scribbling</span>
-            </h2>
-          </div>
-          <div className="quote-grid">
-            <article className="quote-card sun rotate-b">
-              <div className="mascot" aria-hidden="true">
-                <svg viewBox="0 0 140 180" fill="none">
-                  <path d="M58,156 L 56,178" stroke="#1B1B1F" strokeWidth="5" strokeLinecap="round" />
-                  <path d="M82,156 L 84,178" stroke="#1B1B1F" strokeWidth="5" strokeLinecap="round" />
-                  <path d="M48,178 L 64,178" stroke="#1B1B1F" strokeWidth="7" strokeLinecap="round" />
-                  <path d="M76,178 L 92,178" stroke="#1B1B1F" strokeWidth="7" strokeLinecap="round" />
-                  <path d="M40,100 C 40,84 56,76 70,76 C 84,76 100,84 100,100 L 100,140 C 100,150 90,158 70,158 C 50,158 40,150 40,140 Z" fill="#5BC0EB" stroke="#1B1B1F" strokeWidth="4" />
-                  <circle cx="70" cy="52" r="28" fill="#FFB4A2" stroke="#1B1B1F" strokeWidth="4" />
-                  <path d="M42,46 C 44,22 96,22 98,46 L 100,52 C 80,46 60,46 40,52 Z" fill="#FF5A36" stroke="#1B1B1F" strokeWidth="4" strokeLinejoin="round" />
-                  <circle cx="60" cy="54" r="2.4" fill="#1B1B1F" />
-                  <circle cx="80" cy="54" r="2.4" fill="#1B1B1F" />
-                  <path d="M58,64 Q 70,74 82,64" stroke="#1B1B1F" strokeWidth="2.8" strokeLinecap="round" fill="none" />
-                </svg>
-              </div>
-              <p className="font-body">"Met my lab partner on a 40km ride. We submitted a thesis together. Wild."</p>
-              <p className="font-marker quote-name">Anaya <span className="font-scribble text-tomato">- BITS Pilani</span></p>
-            </article>
-            <article className="quote-card sky rotate-a">
-              <div className="mascot" aria-hidden="true">
-                <svg viewBox="0 0 140 180" fill="none">
-                  <path d="M58,156 L 56,178" stroke="#1B1B1F" strokeWidth="5" strokeLinecap="round" />
-                  <path d="M82,156 L 84,178" stroke="#1B1B1F" strokeWidth="5" strokeLinecap="round" />
-                  <path d="M48,178 L 64,178" stroke="#1B1B1F" strokeWidth="7" strokeLinecap="round" />
-                  <path d="M76,178 L 92,178" stroke="#1B1B1F" strokeWidth="7" strokeLinecap="round" />
-                  <path d="M40,100 C 40,84 56,76 70,76 C 84,76 100,84 100,100 L 100,140 C 100,150 90,158 70,158 C 50,158 40,150 40,140 Z" fill="#5BC0EB" stroke="#1B1B1F" strokeWidth="4" />
-                  <circle cx="70" cy="52" r="28" fill="#FFB4A2" stroke="#1B1B1F" strokeWidth="4" />
-                  <path d="M42,46 C 44,22 96,22 98,46 L 100,52 C 80,46 60,46 40,52 Z" fill="#9B5DE5" stroke="#1B1B1F" strokeWidth="4" strokeLinejoin="round" />
-                  <circle cx="60" cy="54" r="2.4" fill="#1B1B1F" />
-                  <circle cx="80" cy="54" r="2.4" fill="#1B1B1F" />
-                  <path d="M58,64 Q 70,74 82,64" stroke="#1B1B1F" strokeWidth="2.8" strokeLinecap="round" fill="none" />
-                </svg>
-              </div>
-              <p className="font-body">"I literally use it 3x a week. My hostel WiFi is jealous."</p>
-              <p className="font-marker quote-name">Karthik <span className="font-scribble text-tomato">- IIT-M</span></p>
-            </article>
-            <article className="quote-card peach rotate-b">
-              <div className="mascot" aria-hidden="true">
-                <svg viewBox="0 0 140 180" fill="none">
-                  <path d="M58,156 L 56,178" stroke="#1B1B1F" strokeWidth="5" strokeLinecap="round" />
-                  <path d="M82,156 L 84,178" stroke="#1B1B1F" strokeWidth="5" strokeLinecap="round" />
-                  <path d="M48,178 L 64,178" stroke="#1B1B1F" strokeWidth="7" strokeLinecap="round" />
-                  <path d="M76,178 L 92,178" stroke="#1B1B1F" strokeWidth="7" strokeLinecap="round" />
-                  <path d="M40,100 C 40,84 56,76 70,76 C 84,76 100,84 100,100 L 100,140 C 100,150 90,158 70,158 C 50,158 40,150 40,140 Z" fill="#5BC0EB" stroke="#1B1B1F" strokeWidth="4" />
-                  <circle cx="70" cy="52" r="28" fill="#FFB4A2" stroke="#1B1B1F" strokeWidth="4" />
-                  <path d="M42,46 C 44,22 96,22 98,46 L 100,52 C 80,46 60,46 40,52 Z" fill="#7BC950" stroke="#1B1B1F" strokeWidth="4" strokeLinejoin="round" />
-                  <circle cx="60" cy="54" r="2.4" fill="#1B1B1F" />
-                  <circle cx="80" cy="54" r="2.4" fill="#1B1B1F" />
-                  <path d="M58,64 Q 70,74 82,64" stroke="#1B1B1F" strokeWidth="2.8" strokeLinecap="round" fill="none" />
-                </svg>
-              </div>
-              <p className="font-body">"Saved enough on petrol to buy noise-cancelling headphones. Worth."</p>
-              <p className="font-marker quote-name">Sara <span className="font-scribble text-tomato">- Christ U</span></p>
-            </article>
-            <article className="quote-card leaf rotate-a">
-              <div className="mascot" aria-hidden="true">
-                <svg viewBox="0 0 140 180" fill="none">
-                  <path d="M58,156 L 56,178" stroke="#1B1B1F" strokeWidth="5" strokeLinecap="round" />
-                  <path d="M82,156 L 84,178" stroke="#1B1B1F" strokeWidth="5" strokeLinecap="round" />
-                  <path d="M48,178 L 64,178" stroke="#1B1B1F" strokeWidth="7" strokeLinecap="round" />
-                  <path d="M76,178 L 92,178" stroke="#1B1B1F" strokeWidth="7" strokeLinecap="round" />
-                  <path d="M40,100 C 40,84 56,76 70,76 C 84,76 100,84 100,100 L 100,140 C 100,150 90,158 70,158 C 50,158 40,150 40,140 Z" fill="#5BC0EB" stroke="#1B1B1F" strokeWidth="4" />
-                  <circle cx="70" cy="52" r="28" fill="#FFB4A2" stroke="#1B1B1F" strokeWidth="4" />
-                  <path d="M42,46 C 44,22 96,22 98,46 L 100,52 C 80,46 60,46 40,52 Z" fill="#5BC0EB" stroke="#1B1B1F" strokeWidth="4" strokeLinejoin="round" />
-                  <circle cx="60" cy="54" r="2.4" fill="#1B1B1F" />
-                  <circle cx="80" cy="54" r="2.4" fill="#1B1B1F" />
-                  <path d="M58,64 Q 70,74 82,64" stroke="#1B1B1F" strokeWidth="2.8" strokeLinecap="round" fill="none" />
-                </svg>
-              </div>
-              <p className="font-body">"My dad finally trusts me with road trips. Big W."</p>
-              <p className="font-marker quote-name">Vihaan <span className="font-scribble text-tomato">- VIT Vellore</span></p>
-            </article>
-          </div>
-        </div>
-      </section>
+const How = () => {
+  const steps = [
+    {
+      n: "01", t: "Choose your ride", d: "Pick what suits your trip. Bike for solo quick trips, auto for short city hops, cab for comfort or group travel. One app, every option — no switching between platforms.",
+      color: "#FFD23F", icon: <PinDoodle className="w-16 h-16" />,
+    },
+    {
+      n: "02", t: "Get matched instantly", d: "The nearest available driver gets your request the moment you book. They confirm within 30 seconds. If they don't, we automatically move to the next driver — you never wait on a maybe.",
+      color: "#5BC0EB", icon: <ChatDoodle className="w-20 h-16" />,
+    },
+    {
+      n: "03", t: "Track and ride", d: "Watch your driver arrive live on the map. Get an alert when they're 2 minutes away. Hop in, sit back — your fare is shown upfront, no surprises at the end.",
+      color: "#7BC950", icon: <CoinDoodle className="w-16 h-16" />,
+    },
+  ];
+  return (
+    <section id="how" className="relative py-24" data-testid="section-how">
+      <div className="absolute top-10 left-8 w-24 float-c opacity-90"><BlobDoodle color="#FFD23F" /></div>
+      <div className="absolute bottom-20 right-10 w-28 float-a opacity-80"><BlobDoodle color="#5BC0EB" /></div>
 
-      <section id="faq" className="section paper-soft">
-        <div className="container narrow">
-          <div className="section-center">
-            <p className="font-scribble kicker text-plum">questions, scribbled</p>
-            <h2 className="font-marker section-title">FAQ <span className="marker">corner</span></h2>
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="flex items-end justify-between flex-wrap gap-4">
+          <div>
+            <p className="font-scribble text-2xl text-plum">~ three taps. one ride. zero stress. ~</p>
+            <h2 className="font-marker text-5xl md:text-6xl mt-2">How it <span className="scribble">works</span></h2>
           </div>
-          <div className="faq-list">
-            <details open className="sketch-card">
-              <summary className="font-marker">Is it only for my college?</summary>
-              <p className="font-body">
-                You can match with anyone on the platform, but your verified
-                college badge unlocks classmate-only filters for late-night and
-                long routes.
-              </p>
-            </details>
-            <details className="sketch-card">
-              <summary className="font-marker">What about safety?</summary>
-              <p className="font-body">
-                Driver IDs are verified, live trip sharing is built in, and SOS
-                tools stay one tap away.
-              </p>
-            </details>
-            <details className="sketch-card">
-              <summary className="font-marker">How is petrol split?</summary>
-              <p className="font-body">
-                The fare splits by distance and seats, so everyone chips in
-                fairly without the awkward math.
-              </p>
-            </details>
-            <details className="sketch-card">
-              <summary className="font-marker">Can I drive my parents' car?</summary>
-              <p className="font-body">
-                Yes - just upload license plus a quick selfie verification. It
-                takes about 90 seconds.
-              </p>
-            </details>
-            <details className="sketch-card">
-              <summary className="font-marker">Do you take a cut?</summary>
-              <p className="font-body">
-                We only keep a tiny platform fee to keep the rides smooth and the
-                doodles flowing.
-              </p>
-            </details>
-          </div>
-        </div>
-      </section>
-
-      <section id="join" className="section">
-        <div className="container narrow join">
-          <div className="join-blob" aria-hidden="true">
-            <svg viewBox="0 0 200 200" fill="none">
-              <path
-                d="M44,72 C 60,28 142,18 168,62 C 196,108 162,168 116,176 C 64,184 18,148 28,108 C 32,92 36,80 44,72 Z"
-                fill="#FFD23F"
-                stroke="#1B1B1F"
-                strokeWidth="3"
-              />
-            </svg>
-          </div>
-          <p className="font-scribble kicker text-tomato">last stop</p>
-          <h2 className="font-marker join-title">Hop in. <span className="scribble">Let's roll.</span></h2>
-          <p className="font-body section-note">
-            Drop your college email - we will send your campus an invite when we
-            land.
+          <p className="font-body text-xl text-ink/70 max-w-md">
+            Built so chaotic college calendars don&apos;t break it. (We tested it during finals week.)
           </p>
-          <form className="join-form">
-            <label className="sr-only" htmlFor="join-email">
-              College email
-            </label>
-            <input
-              id="join-email"
-              type="email"
-              placeholder="you@yourcollege.edu"
-              className="join-input font-hand"
-            />
-            <button type="submit" className="sketch-btn sketch-btn--tomato">
-              Save my seat
-            </button>
-          </form>
-          <div className="join-mascots" aria-hidden="true">
-            <div className="mini-mascot mascot-wobble">CR</div>
-            <div className="mini-mascot mascot-wobble delay-1">CR</div>
-            <div className="mini-mascot mascot-wobble delay-2">CR</div>
-          </div>
         </div>
-      </section>
 
-      <footer className="footer">
-        <div className="scribble-divider" aria-hidden="true"></div>
-        <div className="container footer-grid">
-          <div>
-            <div className="brand">
-              <span className="brand-badge">CR</span>
-              <span className="brand-name">
-                Campus<span className="text-sun">Rides</span>
-              </span>
+        <div className="mt-14 grid md:grid-cols-3 gap-7">
+          {steps.map((s, i) => (
+            <motion.div
+              key={s.n}
+              initial={{ opacity: 0, y: 30, rotate: i % 2 ? -2 : 2 }}
+              whileInView={{ opacity: 1, y: 0, rotate: i % 2 ? -1.5 : 1.5 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ delay: i * 0.12, type: "spring" as const, stiffness: 80 }}
+              whileHover={{ rotate: 0, scale: 1.02 }}
+              className="sketch-card"
+              style={{ background: "#fffdf5" }}
+              data-testid={`how-step-${i}`}
+            >
+              <div className="sticky-tape" style={{ background: s.color }}>Step {s.n}</div>
+              <div className="flex items-start justify-between mt-2">
+                <h3 className="font-marker text-3xl">{s.t}</h3>
+                <div className="float-b">{s.icon}</div>
+              </div>
+              <p className="font-body text-xl text-ink/80 mt-3">{s.d}</p>
+              <div className="mt-5">
+                <SquiggleDoodle className="w-28 h-5" color={s.color} />
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const Why = () => {
+  const cards = [
+    { t: "Verified classmates", d: "College email required. Real people, real campuses.", color: "#FFB4A2", icon: <HeartDoodle className="w-14 h-14" /> },
+    { t: "Fair-share petrol", d: "Auto-split by distance. No awkward Venmo math at 1am.", color: "#FFD23F", icon: <CoinDoodle className="w-14 h-14" /> },
+    { t: "Doodle-fast booking", d: "Tap, swipe, ride. Most matches happen in under 4 minutes.", color: "#5BC0EB", icon: <PaperPlane className="w-16 h-12" /> },
+    { t: "Safe ratings", d: "Two-way reviews + SOS share-trip. Mom-approved.", color: "#7BC950", icon: <ChatDoodle className="w-16 h-12" /> },
+    { t: "Greener footprint", d: "Each shared ride = one less car. Sad polar bears stay happy.", color: "#9B5DE5", icon: <SunDoodle className="w-14 h-14" /> },
+    { t: "Late-night-friendly", d: "Library closes at 2? We've got a 2:01 lift home, probably.", color: "#FF5A36", icon: <SkateDoodle className="w-20 h-12" /> },
+  ];
+  return (
+    <section id="why" className="relative py-24 paper" data-testid="section-why">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="text-center max-w-2xl mx-auto">
+          <p className="font-scribble text-2xl text-tomato">six reasons (we counted)</p>
+          <h2 className="font-marker text-5xl md:text-6xl mt-2">
+            Why students <span className="marker">love</span> us
+          </h2>
+          <p className="font-body text-xl text-ink/70 mt-5">
+            We didn&apos;t build a taxi app. We built the in-between space where strangers become study buddies.
+          </p>
+        </div>
+
+        <div className="mt-14 grid md:grid-cols-3 gap-6">
+          {cards.map((c, i) => (
+            <motion.div
+              key={c.t}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-80px" }}
+              transition={{ delay: (i % 3) * 0.08 }}
+              whileHover={{ y: -6, rotate: i % 2 ? -1 : 1 }}
+              className="sketch-card"
+              data-testid={`why-card-${i}`}
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 grid place-items-center rounded-full border-[2.5px] border-ink" style={{ background: c.color, boxShadow: "3px 3px 0 #1B1B1F" }}>
+                  {c.icon}
+                </div>
+                <h3 className="font-marker text-2xl">{c.t}</h3>
+              </div>
+              <p className="font-body text-xl text-ink/80 mt-4">{c.d}</p>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const Voices = () => {
+  const quotes = [
+    { q: "Met my lab partner on a 40km ride. We submitted a thesis together. Wild.", n: "Anaya", c: "BITS Pilani", color: "#FFD23F" },
+    { q: "I literally use it 3x a week. My hostel WiFi is jealous.", n: "Karthik", c: "IIT-M", color: "#5BC0EB" },
+    { q: "Saved enough on petrol to buy noise-cancelling headphones. Worth.", n: "Sara", c: "Christ U", color: "#FFB4A2" },
+    { q: "My dad finally trusts me with road trips. Big W.", n: "Vihaan", c: "VIT Vellore", color: "#7BC950" },
+  ];
+  return (
+    <section id="voices" className="relative py-24" data-testid="section-voices">
+      <div className="absolute -top-2 right-[8%] w-20 float-b"><PaperPlane /></div>
+      <div className="absolute bottom-10 left-[5%] w-16 float-c"><StarDoodle color="#FF5A36" /></div>
+
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="text-center">
+          <p className="font-scribble text-2xl text-leaf">notes from the back-seat</p>
+          <h2 className="font-marker text-5xl md:text-6xl mt-2">
+            What riders are <span className="scribble">scribbling</span>
+          </h2>
+        </div>
+
+        <div className="mt-14 grid md:grid-cols-2 gap-7">
+          {quotes.map((qq, i) => (
+            <motion.div
+              key={qq.n}
+              initial={{ opacity: 0, y: 30, rotate: i % 2 ? 2 : -2 }}
+              whileInView={{ opacity: 1, y: 0, rotate: i % 2 ? 1.2 : -1.2 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="sketch-card relative"
+              style={{ background: qq.color }}
+              data-testid={`voice-${i}`}
+            >
+              <div className="absolute -top-7 -left-3 w-16 mascot-wobble">
+                <FriendMascot hat={["#FF5A36", "#9B5DE5", "#7BC950", "#5BC0EB"][i % 4]} />
+              </div>
+              <div className="pl-16">
+                <p className="font-body text-2xl text-ink leading-snug">&quot;{qq.q}&quot;</p>
+                <p className="mt-4 font-marker text-xl">{qq.n} <span className="font-scribble text-tomato">— {qq.c}</span></p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const FAQ = () => {
+  const [open, setOpen] = useState<number>(-1);
+  const items = [
+    { q: "Is it only for my college?", a: "You can match with anyone on the platform, but your verified college badge unlocks &apos;classmate-only&apos; filters for late-night & long routes." },
+    { q: "What about safety?", a: "Two-way ratings, live trip-share, SOS button, and a verified email wall. We also nudge drivers who tend to ghost (don't be that person)." },
+    { q: "How is petrol split?", a: "Auto-calculated by GPS distance + current fuel rate in your city. Riders pay in-app, drivers cash out weekly." },
+    { q: "Can I drive my parents&apos; car?", a: "Yep — just upload license + a quick selfie verification. Takes about 90 seconds." },
+    { q: "Do you take a cut?", a: "A tiny ₹5 platform fee per matched ride. That's it. No surge, no peak-hour drama." },
+  ];
+  return (
+    <section id="faq" className="relative py-24 paper" data-testid="section-faq">
+      <div className="mx-auto max-w-4xl px-6">
+        <div className="text-center">
+          <p className="font-scribble text-2xl text-plum">questions, scribbled</p>
+          <h2 className="font-marker text-5xl md:text-6xl mt-2">FAQ <span className="marker">corner</span></h2>
+        </div>
+        <div className="mt-12 space-y-4">
+          {items.map((it, i) => (
+            <div
+              key={i}
+              className="sketch-card cursor-pointer"
+              onClick={() => setOpen(open === i ? -1 : i)}
+              data-testid={`faq-${i}`}
+            >
+              <div className="flex items-center justify-between gap-4">
+                <h3 className="font-marker text-2xl">{it.q}</h3>
+                <motion.span
+                  animate={{ rotate: open === i ? 45 : 0 }}
+                  className="w-10 h-10 grid place-items-center rounded-full border-[2.5px] border-ink bg-sun font-marker text-2xl"
+                  style={{ boxShadow: "2px 2px 0 #1B1B1F" }}
+                >
+                  +
+                </motion.span>
+              </div>
+              <AnimatePresence initial={false}>
+                {open === i && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <p className="font-body text-xl text-ink/80 mt-4">{it.a}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-            <p className="font-body footer-note">A little doodle of a carpool, drawn for student life.</p>
-          </div>
-          <div>
-            <h4 className="font-marker text-sun">Riding</h4>
-            <ul className="font-hand">
-              <li>Find a ride</li>
-              <li>Offer a seat</li>
-              <li>Safety</li>
-              <li>Pricing</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-marker text-sun">Company</h4>
-            <ul className="font-hand">
-              <li>About</li>
-              <li>Careers</li>
-              <li>Press</li>
-              <li>Blog</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-marker text-sun">Stay close</h4>
-            <ul className="font-hand">
-              <li>Instagram</li>
-              <li>Twitter</li>
-              <li>Discord</li>
-              <li>Campus reps</li>
-            </ul>
-          </div>
+          ))}
         </div>
-        <div className="container footer-bottom">
-          <p className="font-hand">Copyright 2026 Campus Rides - drawn by hand, mostly.</p>
-          <p className="font-scribble text-sun">drive friendly - split fairly - doodle daily</p>
+      </div>
+    </section>
+  );
+};
+
+const Join = () => {
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+  return (
+    <section id="join" className="relative py-24 overflow-hidden" data-testid="section-join">
+      <div className="absolute -top-10 left-10 w-32 float-a"><CloudDoodle /></div>
+      <div className="absolute top-20 right-10 w-28 float-c"><SunDoodle /></div>
+      <div className="absolute bottom-10 left-[40%] w-20 float-b"><StarDoodle color="#FFD23F" /></div>
+
+      <div className="mx-auto max-w-3xl px-6 text-center relative">
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-72 -z-10 opacity-70">
+          <BlobDoodle color="#FFD23F" className="w-full" />
         </div>
-      </footer>
+        <p className="font-scribble text-2xl text-tomato">last stop ↓</p>
+        <h2 className="font-marker text-5xl md:text-7xl mt-2 leading-[0.95]">
+          Hop in. <br /> <span className="scribble">Let&apos;s roll.</span>
+        </h2>
+        <p className="font-body text-xl mt-6 text-ink/80">
+          Drop your college email — we&apos;ll send your campus an invite when we land.
+        </p>
+
+        <form
+          onSubmit={(e) => { e.preventDefault(); if (email) setSent(true); }}
+          className="mt-9 flex flex-col sm:flex-row gap-4 items-center justify-center"
+          data-testid="join-form"
+        >
+          <input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            type="email"
+            required
+            placeholder="you@yourcollege.edu"
+            data-testid="join-email"
+            className="w-full sm:w-[360px] px-5 py-3 font-hand text-xl bg-cream border-[2.5px] border-ink rounded-[40px_8px_36px_10px/10px_36px_8px_40px] focus:outline-none focus:ring-0"
+            style={{ boxShadow: "4px 4px 0 #1B1B1F" }}
+          />
+          <button type="submit" className="sketch-btn sketch-btn--tomato" data-testid="join-submit">
+            {sent ? "On the list ✓" : "Save my seat"} <ArrowDoodle className="w-7 h-5" color="#fff" />
+          </button>
+        </form>
+        {sent && (
+          <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 font-scribble text-2xl text-leaf" data-testid="join-success">
+            see you in the back-seat, friend ✿
+          </motion.p>
+        )}
+
+        <div className="mt-10 flex items-center justify-center gap-6">
+          <div className="w-20 mascot-wobble"><FriendMascot hat="#FF5A36" /></div>
+          <div className="w-24 mascot-wobble" style={{ animationDelay: "-1s" }}><FriendMascot hat="#5BC0EB" /></div>
+          <div className="w-20 mascot-wobble" style={{ animationDelay: "-2s" }}><FriendMascot hat="#7BC950" /></div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+const Footer = () => (
+  <footer className="relative bg-ink text-cream pt-16 pb-10" data-testid="footer">
+    <div className="scribble-divider absolute -top-1 left-0 right-0" style={{ filter: "invert(1)" }} />
+    <div className="mx-auto max-w-7xl px-6 grid md:grid-cols-4 gap-10">
+      <div>
+        <div className="flex items-center gap-3">
+          <span className="w-10 h-10 grid place-items-center rounded-full border-[2.5px] border-cream bg-sun">
+            <span className="text-ink font-marker text-lg">CR</span>
+          </span>
+          <span className="font-marker text-2xl">Campus<span className="text-sun">Rides</span></span>
+        </div>
+        <p className="font-body text-lg mt-4 text-cream/70">
+          A little doodle of a carpool, drawn for student life.
+        </p>
+      </div>
+      {[
+        { t: "Riding", l: ["Find a ride", "Offer a seat", "Safety", "Pricing"] },
+        { t: "Company", l: ["About", "Careers", "Press", "Blog"] },
+        { t: "Stay close", l: ["Instagram", "Twitter", "Discord", "Campus reps"] },
+      ].map((col) => (
+        <div key={col.t}>
+          <h4 className="font-marker text-xl text-sun">{col.t}</h4>
+          <ul className="mt-3 space-y-2 font-hand text-lg text-cream/80">
+            {col.l.map((x) => (
+              <li key={x} className="hover:text-sun transition-colors cursor-pointer">{x}</li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+    <div className="mt-12 mx-auto max-w-7xl px-6 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-cream/20 pt-6">
+      <p className="font-hand text-cream/70">© {new Date().getFullYear()} Campus Rides — drawn by hand, mostly.</p>
+      <p className="font-scribble text-xl text-sun">drive friendly · split fairly · doodle daily</p>
+    </div>
+  </footer>
+);
+
+export default function Home() {
+  // tiny cursor sparkle effect (subtle, performant)
+  useEffect(() => {
+    let last = 0;
+    const handler = (e: MouseEvent) => {
+      const now = Date.now();
+      if (now - last < 80) return;
+      last = now;
+      const dot = document.createElement("span");
+      dot.style.cssText = `
+        position:fixed; left:${e.clientX}px; top:${e.clientY}px;
+        width:8px; height:8px; pointer-events:none; z-index:80;
+        background:#FFD23F; border:1.5px solid #1B1B1F; border-radius:50%;
+        transform:translate(-50%,-50%); transition: all .8s ease-out; opacity:.9;
+      `;
+      document.body.appendChild(dot);
+      requestAnimationFrame(() => {
+        dot.style.transform = `translate(-50%,-50%) translateY(-30px) scale(0)`;
+        dot.style.opacity = "0";
+      });
+      setTimeout(() => dot.remove(), 800);
+    };
+    window.addEventListener("mousemove", handler);
+    return () => window.removeEventListener("mousemove", handler);
+  }, []);
+
+  return (
+    <div className="grain min-h-screen relative">
+      <Hero />
+      <Marquee />
+      <How />
+      <Why />
+      <Voices />
+      <FAQ />
+      <Join />
+      <Footer />
     </div>
   );
 }

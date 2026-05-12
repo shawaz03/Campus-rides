@@ -5,6 +5,18 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  --color-cream: #FDF6E3;
+  --color-ink: #1B1B1F;
+  --color-sun: #FFD23F;
+  --color-tomato: #FF5A36;
+  --color-sky: #5BC0EB;
+  --color-leaf: #7BC950;
+  --color-plum: #9B5DE5;
+  --color-peach: #FFB4A2;
+  --font-hand: var(--font-patrick), cursive;
+  --font-scribble: var(--font-caveat), cursive;
+  --font-body: var(--font-gaegu), cursive;
+  --font-marker: var(--font-marker), cursive;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
