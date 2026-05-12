@@ -1,5 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Space_Grotesk, Syne } from "next/font/google";
+import {
+  Caveat,
+  Gaegu,
+  Geist,
+  Geist_Mono,
+  Patrick_Hand,
+  Permanent_Marker,
+  Space_Grotesk,
+  Syne,
+} from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,9 +35,38 @@ const spaceGrotesk = Space_Grotesk({
   display: "swap",
 });
 
+const caveat = Caveat({
+  variable: "--font-caveat",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "swap",
+});
+
+const patrickHand = Patrick_Hand({
+  variable: "--font-patrick",
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+});
+
+const permanentMarker = Permanent_Marker({
+  variable: "--font-marker",
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+});
+
+const gaegu = Gaegu({
+  variable: "--font-gaegu",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Campus Rides",
-  description: "Campus ride booking experience",
+  title: "Campus Rides - doodled lifts for student life",
+  description: "Campus Rides - Share the road. Split the gas. Befriend the lift.",
+  themeColor: "#FDF6E3",
 };
 
 export default function RootLayout({
@@ -39,7 +77,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${syne.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${syne.variable} ${spaceGrotesk.variable} ${caveat.variable} ${patrickHand.variable} ${permanentMarker.variable} ${gaegu.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
