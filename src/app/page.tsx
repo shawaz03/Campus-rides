@@ -8,6 +8,7 @@ import {
   SquiggleDoodle, ArrowDoodle, PinDoodle, CoinDoodle, HeartDoodle,
   SkateDoodle, ChatDoodle, PaperPlane, FriendMascot, RoadPath,
 } from "@/components/doodles";
+import { MeetTheFleet } from "@/components/meet-the-fleet";
 
 const Nav = () => (
   <nav data-testid="nav" className="relative z-40 mx-auto max-w-7xl px-6 pt-6 flex items-center justify-between">
@@ -317,10 +318,10 @@ const Why = () => {
 
 const Voices = () => {
   const quotes = [
-    { q: "Met my lab partner on a 40km ride. We submitted a thesis together. Wild.", n: "Anaya", c: "BITS Pilani", color: "#FFD23F" },
-    { q: "I literally use it 3x a week. My hostel WiFi is jealous.", n: "Karthik", c: "IIT-M", color: "#5BC0EB" },
-    { q: "Saved enough on petrol to buy noise-cancelling headphones. Worth.", n: "Sara", c: "Christ U", color: "#FFB4A2" },
-    { q: "My dad finally trusts me with road trips. Big W.", n: "Vihaan", c: "VIT Vellore", color: "#7BC950" },
+    { q: "No more bargaining with auto drivers. I book in seconds and get upfront pricing.", n: "Aditya", c: "Hyderabad", color: "#FFD23F" },
+    { q: "The bike rides are cheap, fast, and perfect for short trips.", n: "Sneha", c: "Bangalore", color: "#5BC0EB" },
+    { q: "I use bikes for speed and cabs for luggage — all in one app with live tracking.", n: "Ramesh", c: "Chennai", color: "#FFB4A2" },
+    { q: "Pre-booking helped me avoid festival rush and surge pricing.", n: "Divya", c: "Pune", color: "#7BC950" },
   ];
   return (
     <section id="voices" className="relative py-24" data-testid="section-voices">
@@ -365,11 +366,11 @@ const Voices = () => {
 const FAQ = () => {
   const [open, setOpen] = useState<number>(-1);
   const items = [
-    { q: "Is it only for my college?", a: "You can match with anyone on the platform, but your verified college badge unlocks &apos;classmate-only&apos; filters for late-night & long routes." },
-    { q: "What about safety?", a: "Two-way ratings, live trip-share, SOS button, and a verified email wall. We also nudge drivers who tend to ghost (don't be that person)." },
-    { q: "How is petrol split?", a: "Auto-calculated by GPS distance + current fuel rate in your city. Riders pay in-app, drivers cash out weekly." },
-    { q: "Can I drive my parents&apos; car?", a: "Yep — just upload license + a quick selfie verification. Takes about 90 seconds." },
-    { q: "Do you take a cut?", a: "A tiny ₹5 platform fee per matched ride. That's it. No surge, no peak-hour drama." },
+    { q: "What types of rides are available?", a: "CampusRide offers bikes for solo quick trips and last-mile travel, autos for affordable short-to-medium city rides, and cabs for comfort, longer distances, or group travel. All three are available in one booking flow — pick what fits your trip." },
+    { q: "How is the fare calculated?", a: "The fare is calculated upfront based on distance, vehicle type, and current demand. What you see before you confirm is what you pay — no hidden charges, no end-of-trip surprises. Estimated tolls and surge periods are shown clearly before booking." },
+    { q: "What if my driver cancels after I've booked?", a: "If a driver cancels, we immediately search for the next nearest available driver and reassign your ride automatically. You won't need to rebook — just wait a few seconds. If no driver is found in your area within 2 minutes, you get a full refund and a notification." },
+    { q: "Is there a pre-booking option?", a: "Yes. You can schedule a ride up to 24 hours in advance. This is especially useful during festival seasons, early morning airport trips, or peak college exam periods when driver availability is lower. You'll get a confirmation and a reminder 30 minutes before your pickup time." },
+    { q: "Is CampusRide only for certain cities or colleges?", a: "No — CampusRide is open to all users in supported areas, not just students. Whether you're commuting to work, heading home for the weekend, or just need a quick local ride, the app works for everyone. We're actively expanding to more cities." },
   ];
   return (
     <section id="faq" className="relative py-24 paper" data-testid="section-faq">
@@ -422,7 +423,7 @@ const Join = () => {
   const [sent, setSent] = useState(false);
   return (
     <section id="join" className="relative py-24 overflow-hidden" data-testid="section-join">
-      <div className="absolute -top-10 left-10 w-32 float-a"><CloudDoodle /></div>
+      <div className="absolute top-10 md:top-20 left-4 md:left-16 w-32 float-a"><CloudDoodle /></div>
       <div className="absolute top-20 right-10 w-28 float-c"><SunDoodle /></div>
       <div className="absolute bottom-10 left-[40%] w-20 float-b"><StarDoodle color="#FFD23F" /></div>
 
@@ -540,6 +541,7 @@ export default function Home() {
     <div className="grain min-h-screen relative">
       <Hero />
       <Marquee />
+      <MeetTheFleet />
       <How />
       <Why />
       <Voices />

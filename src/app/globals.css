@@ -1197,3 +1197,74 @@ html,
     animation: none;
   }
 }
+
+/* ---------- FLEET SECTION ADDITIONS ---------- */
+
+.fleet-card {
+  transition: transform 0.35s cubic-bezier(.2,.8,.2,1), box-shadow 0.35s ease;
+  transform-origin: center;
+  will-change: transform;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.fleet-card:hover, .fleet-card.active {
+  box-shadow: 10px 10px 0 0 var(--ink);
+}
+.fleet-card .spec-pop {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.35s ease, max-height 0.45s cubic-bezier(.2,.8,.2,1), transform 0.35s ease, margin-top 0.35s ease;
+  margin-top: 0;
+}
+.fleet-card:hover .spec-pop, .fleet-card.active .spec-pop {
+  opacity: 1;
+  max-height: 220px;
+  transform: translateY(0);
+  margin-top: 1.25rem;
+}
+.fleet-card:hover .wheel-spin-on-hover, .fleet-card.active .wheel-spin-on-hover { animation: wheel-spin 1.2s linear infinite; transform-origin: center; transform-box: fill-box; }
+.fleet-card:hover .doodle-wiggle, .fleet-card.active .doodle-wiggle { animation: wiggle 0.6s ease-in-out infinite; }
+
+.fleet-card.tilt-left:hover, .fleet-card.tilt-left.active { transform: rotate(-3.5deg) translateY(-6px) scale(1.02); }
+.fleet-card.tilt-up:hover, .fleet-card.tilt-up.active { transform: rotate(1deg) translateY(-10px) scale(1.03); }
+.fleet-card.tilt-right:hover, .fleet-card.tilt-right.active { transform: rotate(3.5deg) translateY(-6px) scale(1.02); }
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+.sticky-tape {
+  position: absolute;
+  top: -14px;
+  left: 22px;
+  padding: 4px 14px;
+  background: var(--sun);
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  font-family: var(--font-marker), cursive;
+  font-size: 0.95rem;
+  transform: rotate(-4deg);
+}
+
+.dashed-road {
+  background-image: linear-gradient(to right, var(--ink) 50%, transparent 0%);
+  background-size: 18px 4px;
+  background-repeat: repeat-x;
+  background-position: center;
+}
+
+.stamp {
+  display: inline-grid;
+  place-items: center;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 2px 12px;
+  font-family: var(--font-marker), cursive;
+  font-size: 0.85rem;
+  background: var(--cream);
+  box-shadow: 2px 2px 0 var(--ink);
+  transform: rotate(-3deg);
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-
+import { motion } from "framer-motion";
 /* All illustrations are inline SVGs styled to feel hand-drawn:
    - rough strokes with stroke-linecap="round"
    - slightly tilted / imperfect geometry
@@ -200,14 +200,16 @@ export const FriendMascot = ({ className = "", hat = "#FF5A36" }: FriendMascotPr
 
 export const RoadPath = ({ className = "" }: DoodleProps) => (
   <svg viewBox="0 0 1400 220" className={className} fill="none" preserveAspectRatio="none">
-    <path
+    <motion.path
       d="M0,170 C 200,40 380,260 580,140 C 760,30 940,250 1140,150 C 1280,90 1360,180 1400,140"
       stroke="#1B1B1F"
       strokeWidth="5"
       strokeLinecap="round"
-      strokeDasharray="14 14"
       fill="none"
-      className="draw-path draw-path--slow"
+      initial={{ pathLength: 0 }}
+      whileInView={{ pathLength: 1 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 2, ease: "easeInOut" }}
     />
   </svg>
 );
