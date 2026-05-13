@@ -314,7 +314,7 @@ const FleetCard = ({
         {/* footer scribble */}
         <div className="mt-5 px-1 flex items-center gap-2">
           <Squiggle className="w-24 h-4" stroke={accent} />
-          <span className="font-hand text-lg text-ink/70">tap to ride</span>
+          <span className="font-hand text-lg text-ink/90">tap to ride</span>
           <CurvyArrow className="w-10 h-5 ml-auto" stroke={accent} />
         </div>
       </div>
@@ -329,7 +329,7 @@ const FleetCard = ({
 
 const SpecRow = ({ label, value }: any) => (
   <div className="flex items-baseline gap-3 font-hand text-xl text-ink">
-    <span className="font-marker text-base tracking-wide text-ink/60 min-w-[58px]">
+    <span className="font-marker text-base tracking-wide text-ink/80 min-w-[58px]">
       {label}
     </span>
     <span className="flex-1 border-b-2 border-dotted border-ink/30 mb-1" aria-hidden />
@@ -369,7 +369,7 @@ export const MeetTheFleet = () => {
               Meet the <span className="scribble">Fleet</span>
             </h2>
           </div>
-          <p className="font-body text-xl text-ink/70 max-w-md leading-snug">
+          <p className="font-body text-xl text-ink/90 max-w-md leading-snug">
             Three flavours of &quot;let&apos;s go&quot;. Pick the vibe, split the bill, save the
             planet (a tiny bit).
           </p>
@@ -435,7 +435,7 @@ export const MeetTheFleet = () => {
         {/* footer note */}
         <div className="mt-14 flex items-center justify-center gap-4 flex-wrap">
           <span className="font-scribble text-2xl text-plum">psst —</span>
-          <p className="font-hand text-xl text-ink/80 max-w-2xl text-center">
+          <p className="font-hand text-xl text-ink max-w-2xl text-center">
             All three split the fare automatically. No &quot;minimum bill&quot;
             awkwardness, no calculator wars at the back-seat.
           </p>

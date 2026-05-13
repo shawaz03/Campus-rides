@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Caveat,
   Gaegu,
@@ -63,10 +63,13 @@ const gaegu = Gaegu({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  themeColor: "#FDF6E3",
+};
+
 export const metadata: Metadata = {
   title: "Campus Rides - doodled lifts for student life",
   description: "Campus Rides - Share the road. Split the gas. Befriend the lift.",
-  themeColor: "#FDF6E3",
 };
 
 export default function RootLayout({

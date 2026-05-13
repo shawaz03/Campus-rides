@@ -1,15 +1,12 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import {
   CarMascot, CloudDoodle, SunDoodle, StarDoodle, BlobDoodle,
   SquiggleDoodle, ArrowDoodle, PinDoodle, CoinDoodle, HeartDoodle,
   SkateDoodle, ChatDoodle, PaperPlane, FriendMascot, RoadPath,
-} from "@/components/doodles";
-import { MeetTheFleet } from "@/components/meet-the-fleet";
+} from "./components/Doodles";
 
+/* ============== NAV ============== */
 const Nav = () => (
   <nav data-testid="nav" className="relative z-40 mx-auto max-w-7xl px-6 pt-6 flex items-center justify-between">
     <a href="#" className="flex items-center gap-3" data-testid="logo">
@@ -29,12 +26,13 @@ const Nav = () => (
       <a href="#voices" className="hover:text-tomato transition-colors" data-testid="nav-voices">Voices</a>
       <a href="#faq" className="hover:text-tomato transition-colors" data-testid="nav-faq">FAQ</a>
     </div>
-    <Link href="/auth" data-testid="nav-cta" className="sketch-btn sketch-btn--tomato !py-2 !px-4 !text-base">
-      Get Started <span aria-hidden>→</span>
-    </Link>
+    <a href="#join" data-testid="nav-cta" className="sketch-btn sketch-btn--tomato !py-2 !px-4 !text-base">
+      Hop in <span aria-hidden>→</span>
+    </a>
   </nav>
 );
 
+/* ============== HERO ============== */
 const Hero = () => {
   const { scrollY } = useScroll();
   const yCloud = useTransform(scrollY, [0, 600], [0, -120]);
@@ -43,6 +41,7 @@ const Hero = () => {
 
   return (
     <header className="relative overflow-hidden pt-6 pb-28">
+      {/* floating doodles */}
       <motion.div style={{ y: yCloud }} className="absolute top-20 left-[6%] w-28 float-a">
         <CloudDoodle />
       </motion.div>
@@ -65,6 +64,7 @@ const Hero = () => {
       <Nav />
 
       <div className="relative mx-auto max-w-7xl px-6 pt-14 md:pt-20 grid md:grid-cols-12 gap-8 items-center">
+        {/* LEFT */}
         <div className="md:col-span-7">
           <motion.p
             initial={{ opacity: 0, y: 10 }}
@@ -80,24 +80,23 @@ const Hero = () => {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="mt-3 font-marker leading-[1] text-[clamp(2rem,5.5vw,5rem)] whitespace-nowrap"
+            className="mt-3 font-marker leading-[0.95] text-[clamp(2.6rem,7vw,5.6rem)]"
             data-testid="hero-title"
           >
-            Book your <span className="scribble">ride</span>.<br />
-            Catch your <span className="marker">Bus/Train</span>.<br />
-            Never miss <span className="text-tomato">home</span>.
+            Share the <span className="scribble">road</span>.<br />
+            Split the <span className="marker">gas</span>.<br />
+            Make a <span className="text-tomato">friend</span>.
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25, duration: 0.5 }}
-            className="mt-7 font-body text-2xl max-w-xl text-ink"
+            className="mt-7 font-body text-2xl max-w-xl text-ink/80"
             data-testid="hero-subtitle"
           >
-            CampusRide is the little app that saves big panic. Festival season, end of semester,
-            or just a random Tuesday evening — open the app, tap your bus stop, and an auto finds
-            you in minutes. No haggling, no waiting at the gate, no missed trains.
+            Campus Rides is a doodly little carpool for college kids — find a lift to lecture,
+            home for the weekend, or that gig three towns over. No taxis. No surge. Just classmates.
           </motion.p>
 
           <motion.div
@@ -112,11 +111,12 @@ const Hero = () => {
             <a href="#how" data-testid="hero-cta-secondary" className="sketch-btn sketch-btn--sun">
               How it works
             </a>
-            <span className="font-scribble text-xl text-ink/90 ml-2 hidden sm:inline">
+            <span className="font-scribble text-xl text-ink/70 ml-2 hidden sm:inline">
               ↖ start here, friend
             </span>
           </motion.div>
 
+          {/* stats */}
           <div className="mt-12 flex flex-wrap gap-8" data-testid="hero-stats">
             {[
               { n: "12k+", l: "students lifted" },
@@ -131,18 +131,19 @@ const Hero = () => {
                 className="flex items-center gap-3"
               >
                 <span className="font-marker text-4xl">{s.n}</span>
-                <span className="font-hand text-lg text-ink/90 leading-tight max-w-[110px]">{s.l}</span>
+                <span className="font-hand text-lg text-ink/70 leading-tight max-w-[110px]">{s.l}</span>
               </motion.div>
             ))}
           </div>
         </div>
 
+        {/* RIGHT — mascot scene */}
         <div className="md:col-span-5 relative">
           <motion.div
             style={{ rotate: rotateCar }}
             initial={{ opacity: 0, x: 60 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2, duration: 0.7, type: "spring" as const }}
+            transition={{ delay: 0.2, duration: 0.7, type: "spring" }}
             className="relative"
           >
             <div className="absolute -inset-6 -z-10">
@@ -151,6 +152,7 @@ const Hero = () => {
             <div className="mascot-wobble">
               <CarMascot className="w-full" />
             </div>
+            {/* little sticky note */}
             <motion.div
               initial={{ opacity: 0, rotate: -12, y: 20 }}
               animate={{ opacity: 1, rotate: -8, y: 0 }}
@@ -159,13 +161,13 @@ const Hero = () => {
               style={{ boxShadow: "4px 4px 0 #1B1B1F" }}
               data-testid="hero-sticky"
             >
-              &quot;Saved ₹400 + made 3 friends&quot; <br />
+              "Saved ₹400 + made 3 friends" <br />
               <span className="font-scribble text-tomato text-xl">— Riya, 2nd yr</span>
             </motion.div>
             <motion.div
               initial={{ opacity: 0, scale: 0.4 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.0, type: "spring" as const }}
+              transition={{ delay: 1.0, type: "spring" }}
               className="absolute -top-4 -right-2 w-20 float-b"
             >
               <CoinDoodle />
@@ -173,7 +175,7 @@ const Hero = () => {
             <motion.div
               initial={{ opacity: 0, scale: 0.4 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.15, type: "spring" as const }}
+              transition={{ delay: 1.15, type: "spring" }}
               className="absolute top-10 -left-10 w-16 float-c"
             >
               <HeartDoodle />
@@ -182,6 +184,7 @@ const Hero = () => {
         </div>
       </div>
 
+      {/* hand-drawn animated road below hero */}
       <div className="relative mt-10 mx-auto max-w-[1500px] px-2">
         <RoadPath className="w-full h-40" />
       </div>
@@ -189,12 +192,13 @@ const Hero = () => {
   );
 };
 
+/* ============== MARQUEE ============== */
 const Marquee = () => {
   const items = ["Mid-sem break? ⇢", "Airport runs", "Hostel ↔ Home", "Friday gigs", "Match-day pile-ons", "Library raids @ 2am", "Bestie's wedding ↗"];
   const row = [...items, ...items];
   return (
     <div className="relative bg-ink text-cream py-5 border-y-[3px] border-ink overflow-hidden" data-testid="marquee">
-      <div className="flex gap-12 whitespace-nowrap w-[200%] animate-[marq_32s_linear_infinite]">
+      <div className="flex gap-12 whitespace-nowrap marq w-[200%]">
         {row.map((t, i) => (
           <span key={i} className="font-marker text-2xl tracking-wide flex items-center gap-12">
             <StarDoodle className="inline-block w-7 h-7" color="#FFD23F" />
@@ -206,19 +210,29 @@ const Marquee = () => {
   );
 };
 
+/* ============== HOW IT WORKS ============== */
 const How = () => {
   const steps = [
     {
-      n: "01", t: "Choose your ride", d: "Pick what suits your trip. Bike for solo quick trips, auto for short city hops, cab for comfort or group travel. One app, every option — no switching between platforms.",
-      color: "#FFD23F", icon: <PinDoodle className="w-16 h-16" />,
+      n: "01",
+      t: "Doodle a route",
+      d: "Type where you're going. Or tap the map. The car listens, we promise.",
+      color: "#FFD23F",
+      icon: <PinDoodle className="w-16 h-16" />,
     },
     {
-      n: "02", t: "Get matched instantly", d: "The nearest available driver gets your request the moment you book. They confirm within 30 seconds. If they don't, we automatically move to the next driver — you never wait on a maybe.",
-      color: "#5BC0EB", icon: <ChatDoodle className="w-20 h-16" />,
+      n: "02",
+      t: "Match a classmate",
+      d: "We find someone on the same path. Verified by college email — no randos.",
+      color: "#5BC0EB",
+      icon: <ChatDoodle className="w-20 h-16" />,
     },
     {
-      n: "03", t: "Track and ride", d: "Watch your driver arrive live on the map. Get an alert when they're 2 minutes away. Hop in, sit back — your fare is shown upfront, no surprises at the end.",
-      color: "#7BC950", icon: <CoinDoodle className="w-16 h-16" />,
+      n: "03",
+      t: "Split & roll out",
+      d: "Petrol split fairly. Pay in-app. High-five at drop-off (optional but encouraged).",
+      color: "#7BC950",
+      icon: <CoinDoodle className="w-16 h-16" />,
     },
   ];
   return (
@@ -229,11 +243,11 @@ const How = () => {
       <div className="mx-auto max-w-7xl px-6">
         <div className="flex items-end justify-between flex-wrap gap-4">
           <div>
-            <p className="font-scribble text-2xl text-plum">~ three taps. one ride. zero stress. ~</p>
+            <p className="font-scribble text-2xl text-plum">three little steps ↓</p>
             <h2 className="font-marker text-5xl md:text-6xl mt-2">How it <span className="scribble">works</span></h2>
           </div>
-          <p className="font-body text-xl text-ink/90 max-w-md">
-            Built so chaotic college calendars don&apos;t break it. (We tested it during finals week.)
+          <p className="font-body text-xl text-ink/70 max-w-md">
+            Built so chaotic college calendars don't break it. (We tested it during finals week.)
           </p>
         </div>
 
@@ -244,7 +258,7 @@ const How = () => {
               initial={{ opacity: 0, y: 30, rotate: i % 2 ? -2 : 2 }}
               whileInView={{ opacity: 1, y: 0, rotate: i % 2 ? -1.5 : 1.5 }}
               viewport={{ once: true, margin: "-80px" }}
-              transition={{ delay: i * 0.12, type: "spring" as const, stiffness: 80 }}
+              transition={{ delay: i * 0.12, type: "spring", stiffness: 80 }}
               whileHover={{ rotate: 0, scale: 1.02 }}
               className="sketch-card"
               style={{ background: "#fffdf5" }}
@@ -255,7 +269,7 @@ const How = () => {
                 <h3 className="font-marker text-3xl">{s.t}</h3>
                 <div className="float-b">{s.icon}</div>
               </div>
-              <p className="font-body text-xl text-ink mt-3">{s.d}</p>
+              <p className="font-body text-xl text-ink/80 mt-3">{s.d}</p>
               <div className="mt-5">
                 <SquiggleDoodle className="w-28 h-5" color={s.color} />
               </div>
@@ -267,6 +281,7 @@ const How = () => {
   );
 };
 
+/* ============== WHY US ============== */
 const Why = () => {
   const cards = [
     { t: "Verified classmates", d: "College email required. Real people, real campuses.", color: "#FFB4A2", icon: <HeartDoodle className="w-14 h-14" /> },
@@ -284,8 +299,8 @@ const Why = () => {
           <h2 className="font-marker text-5xl md:text-6xl mt-2">
             Why students <span className="marker">love</span> us
           </h2>
-          <p className="font-body text-xl text-ink/90 mt-5">
-            We didn&apos;t build a taxi app. We built the in-between space where strangers become study buddies.
+          <p className="font-body text-xl text-ink/70 mt-5">
+            We didn't build a taxi app. We built the in-between space where strangers become study buddies.
           </p>
         </div>
 
@@ -307,7 +322,7 @@ const Why = () => {
                 </div>
                 <h3 className="font-marker text-2xl">{c.t}</h3>
               </div>
-              <p className="font-body text-xl text-ink mt-4">{c.d}</p>
+              <p className="font-body text-xl text-ink/80 mt-4">{c.d}</p>
             </motion.div>
           ))}
         </div>
@@ -316,12 +331,13 @@ const Why = () => {
   );
 };
 
+/* ============== TESTIMONIALS ============== */
 const Voices = () => {
   const quotes = [
-    { q: "No more bargaining with auto drivers. I book in seconds and get upfront pricing.", n: "Aditya", c: "Hyderabad", color: "#FFD23F" },
-    { q: "The bike rides are cheap, fast, and perfect for short trips.", n: "Sneha", c: "Bangalore", color: "#5BC0EB" },
-    { q: "I use bikes for speed and cabs for luggage — all in one app with live tracking.", n: "Ramesh", c: "Chennai", color: "#FFB4A2" },
-    { q: "Pre-booking helped me avoid festival rush and surge pricing.", n: "Divya", c: "Pune", color: "#7BC950" },
+    { q: "Met my lab partner on a 40km ride. We submitted a thesis together. Wild.", n: "Anaya", c: "BITS Pilani", color: "#FFD23F" },
+    { q: "I literally use it 3x a week. My hostel WiFi is jealous.", n: "Karthik", c: "IIT-M", color: "#5BC0EB" },
+    { q: "Saved enough on petrol to buy noise-cancelling headphones. Worth.", n: "Sara", c: "Christ U", color: "#FFB4A2" },
+    { q: "My dad finally trusts me with road trips. Big W.", n: "Vihaan", c: "VIT Vellore", color: "#7BC950" },
   ];
   return (
     <section id="voices" className="relative py-24" data-testid="section-voices">
@@ -352,7 +368,7 @@ const Voices = () => {
                 <FriendMascot hat={["#FF5A36", "#9B5DE5", "#7BC950", "#5BC0EB"][i % 4]} />
               </div>
               <div className="pl-16">
-                <p className="font-body text-2xl text-ink leading-snug">&quot;{qq.q}&quot;</p>
+                <p className="font-body text-2xl text-ink leading-snug">"{qq.q}"</p>
                 <p className="mt-4 font-marker text-xl">{qq.n} <span className="font-scribble text-tomato">— {qq.c}</span></p>
               </div>
             </motion.div>
@@ -363,14 +379,15 @@ const Voices = () => {
   );
 };
 
+/* ============== FAQ ============== */
 const FAQ = () => {
-  const [open, setOpen] = useState<number>(-1);
+  const [open, setOpen] = useState(0);
   const items = [
-    { q: "What types of rides are available?", a: "CampusRide offers bikes for solo quick trips and last-mile travel, autos for affordable short-to-medium city rides, and cabs for comfort, longer distances, or group travel. All three are available in one booking flow — pick what fits your trip." },
-    { q: "How is the fare calculated?", a: "The fare is calculated upfront based on distance, vehicle type, and current demand. What you see before you confirm is what you pay — no hidden charges, no end-of-trip surprises. Estimated tolls and surge periods are shown clearly before booking." },
-    { q: "What if my driver cancels after I've booked?", a: "If a driver cancels, we immediately search for the next nearest available driver and reassign your ride automatically. You won't need to rebook — just wait a few seconds. If no driver is found in your area within 2 minutes, you get a full refund and a notification." },
-    { q: "Is there a pre-booking option?", a: "Yes. You can schedule a ride up to 24 hours in advance. This is especially useful during festival seasons, early morning airport trips, or peak college exam periods when driver availability is lower. You'll get a confirmation and a reminder 30 minutes before your pickup time." },
-    { q: "Is CampusRide only for certain cities or colleges?", a: "No — CampusRide is open to all users in supported areas, not just students. Whether you're commuting to work, heading home for the weekend, or just need a quick local ride, the app works for everyone. We're actively expanding to more cities." },
+    { q: "Is it only for my college?", a: "You can match with anyone on the platform, but your verified college badge unlocks 'classmate-only' filters for late-night & long routes." },
+    { q: "What about safety?", a: "Two-way ratings, live trip-share, SOS button, and a verified email wall. We also nudge drivers who tend to ghost (don't be that person)." },
+    { q: "How is petrol split?", a: "Auto-calculated by GPS distance + current fuel rate in your city. Riders pay in-app, drivers cash out weekly." },
+    { q: "Can I drive my parents' car?", a: "Yep — just upload license + a quick selfie verification. Takes about 90 seconds." },
+    { q: "Do you take a cut?", a: "A tiny ₹5 platform fee per matched ride. That's it. No surge, no peak-hour drama." },
   ];
   return (
     <section id="faq" className="relative py-24 paper" data-testid="section-faq">
@@ -406,7 +423,7 @@ const FAQ = () => {
                     transition={{ duration: 0.3 }}
                     className="overflow-hidden"
                   >
-                    <p className="font-body text-xl text-ink mt-4">{it.a}</p>
+                    <p className="font-body text-xl text-ink/80 mt-4">{it.a}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -418,12 +435,13 @@ const FAQ = () => {
   );
 };
 
+/* ============== JOIN / CTA ============== */
 const Join = () => {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   return (
     <section id="join" className="relative py-24 overflow-hidden" data-testid="section-join">
-      <div className="absolute top-10 md:top-20 left-4 md:left-16 w-32 float-a"><CloudDoodle /></div>
+      <div className="absolute -top-10 left-10 w-32 float-a"><CloudDoodle /></div>
       <div className="absolute top-20 right-10 w-28 float-c"><SunDoodle /></div>
       <div className="absolute bottom-10 left-[40%] w-20 float-b"><StarDoodle color="#FFD23F" /></div>
 
@@ -433,10 +451,10 @@ const Join = () => {
         </div>
         <p className="font-scribble text-2xl text-tomato">last stop ↓</p>
         <h2 className="font-marker text-5xl md:text-7xl mt-2 leading-[0.95]">
-          Hop in. <br /> <span className="scribble">Let&apos;s roll.</span>
+          Hop in. <br /> <span className="scribble">Let's roll.</span>
         </h2>
-        <p className="font-body text-xl mt-6 text-ink">
-          Drop your college email — we&apos;ll send your campus an invite when we land.
+        <p className="font-body text-xl mt-6 text-ink/80">
+          Drop your college email — we'll send your campus an invite when we land.
         </p>
 
         <form
@@ -474,6 +492,7 @@ const Join = () => {
   );
 };
 
+/* ============== FOOTER ============== */
 const Footer = () => (
   <footer className="relative bg-ink text-cream pt-16 pb-10" data-testid="footer">
     <div className="scribble-divider absolute -top-1 left-0 right-0" style={{ filter: "invert(1)" }} />
@@ -511,11 +530,12 @@ const Footer = () => (
   </footer>
 );
 
-export default function Home() {
+/* ============== APP ============== */
+export default function App() {
   // tiny cursor sparkle effect (subtle, performant)
   useEffect(() => {
     let last = 0;
-    const handler = (e: MouseEvent) => {
+    const handler = (e) => {
       const now = Date.now();
       if (now - last < 80) return;
       last = now;
@@ -541,7 +561,6 @@ export default function Home() {
     <div className="grain min-h-screen relative">
       <Hero />
       <Marquee />
-      <MeetTheFleet />
       <How />
       <Why />
       <Voices />
