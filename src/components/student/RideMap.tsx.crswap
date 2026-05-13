@@ -1,0 +1,184 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import maplibregl, { Map as MLMap, Marker } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+
+interface RideMapProps {
+  pickup: { name: string; coords: [number, number] } | null;
+  destination: { name: string; coords: [number, number] } | null;
+  center: [number, number];
+}
+
+// Free OSM raster style via CARTO basemaps (CORS-friendly, no API key).
+const OSM_STYLE = {
+  version: 8,
+  sources: {
+    "osm-tiles": {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+        "https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors © CARTO",
+    },
+  },
+  layers: [
+    {
+      id: "bg",
+      type: "background",
+      paint: { "background-color": "#FDF6E3" },
+    },
+    {
+      id: "osm-tiles",
+      type: "raster",
+      source: "osm-tiles",
+      minzoom: 0,
+      maxzoom: 19,
+    },
+  ],
+} as unknown as maplibregl.StyleSpecification;
+
+function pinElement(color: string, label: string) {
+  const el = document.createElement("div");
+  el.style.cssText = `
+    width:46px;height:60px;position:relative;cursor:pointer;
+  `;
+  el.innerHTML = `
+    <svg viewBox="0 0 60 80" width="46" height="60" xmlns="http://www.w3.org/2000/svg">
+      <path d="M30,4 C 14,4 6,18 8,32 C 10,46 30,72 30,72 C 30,72 50,46 52,32 C 54,18 46,4 30,4 Z" fill="${color}" stroke="#1B1B1F" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="30" cy="30" r="11" fill="#FDF6E3" stroke="#1B1B1F" stroke-width="2.5"/>
+      <text x="30" y="35" text-anchor="middle" font-family="Permanent Marker, cursive" font-size="14" fill="#1B1B1F">${label}</text>
+    </svg>
+  `;
+  return el;
+}
+
+export default function RideMap({ pickup, destination, center }: RideMapProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<MLMap | null>(null);
+  const pickupMarkerRef = useRef<Marker | null>(null);
+  const destMarkerRef = useRef<Marker | null>(null);
+
+  // init map once
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+      style: OSM_STYLE,
+      center,
+      zoom: 12,
+    });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    map.on("load", () => {
+      map.addSource("route", {
+        type: "geojson",
+        data: {
+          type: "Feature",
+          properties: {},
+          geometry: { type: "LineString", coordinates: [] },
+        },
+      });
+      map.addLayer({
+        id: "route-shadow",
+        type: "line",
+        source: "route",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": "#1B1B1F",
+          "line-width": 8,
+          "line-opacity": 0.95,
+          "line-dasharray": [1, 0],
+        },
+      });
+      map.addLayer({
+        id: "route-line",
+        type: "line",
+        source: "route",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": "#FF5A36",
+          "line-width": 4,
+          "line-dasharray": [2, 1.2],
+        },
+      });
+    });
+    mapRef.current = map;
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // pickup marker
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    pickupMarkerRef.current?.remove();
+    if (pickup) {
+      pickupMarkerRef.current = new maplibregl.Marker({
+        element: pinElement("#7BC950", "A"),
+        anchor: "bottom",
+      })
+        .setLngLat(pickup.coords)
+        .setPopup(new maplibregl.Popup({ offset: 28 }).setText(pickup.name))
+        .addTo(map);
+    }
+  }, [pickup]);
+
+  // destination marker
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    destMarkerRef.current?.remove();
+    if (destination) {
+      destMarkerRef.current = new maplibregl.Marker({
+        element: pinElement("#FF5A36", "B"),
+        anchor: "bottom",
+      })
+        .setLngLat(destination.coords)
+        .setPopup(new maplibregl.Popup({ offset: 28 }).setText(destination.name))
+        .addTo(map);
+    }
+  }, [destination]);
+
+  // fit bounds & draw straight-line route
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const updateRoute = () => {
+      const src = map.getSource("route") as maplibregl.GeoJSONSource | undefined;
+      if (!src) return;
+      const coords: [number, number][] = [];
+      if (pickup) coords.push(pickup.coords);
+      if (destination) coords.push(destination.coords);
+      src.setData({
+        type: "Feature",
+        properties: {},
+        geometry: { type: "LineString", coordinates: coords },
+      });
+      if (coords.length === 2) {
+        const bounds = new maplibregl.LngLatBounds(coords[0], coords[0]);
+        coords.forEach((c) => bounds.extend(c));
+        map.fitBounds(bounds, { padding: 80, duration: 700, maxZoom: 14 });
+      } else if (coords.length === 1) {
+        map.flyTo({ center: coords[0], zoom: 13, duration: 700 });
+      }
+    };
+    if (map.isStyleLoaded()) updateRoute();
+    else map.once("load", updateRoute);
+  }, [pickup, destination]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="w-full h-full rounded-[24px_8px_22px_10px/10px_22px_8px_24px] overflow-hidden border-[2.5px] border-ink"
+      style={{ boxShadow: "6px 6px 0 #1B1B1F" }}
+      data-testid="ride-map"
+    />
+  );
+}
