@@ -1,14 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence, useInView } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Lenis from "lenis";
 import {
   CarMascot, CloudDoodle, SunDoodle, StarDoodle, BlobDoodle,
   SquiggleDoodle, ArrowDoodle, PinDoodle, CoinDoodle, HeartDoodle,
   SkateDoodle, ChatDoodle, PaperPlane, FriendMascot, RoadPath,
 } from "@/components/doodles";
 import { MeetTheFleet } from "@/components/meet-the-fleet";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const Nav = () => (
   <nav data-testid="nav" className="relative z-40 mx-auto max-w-7xl px-6 pt-6 flex items-center justify-between">
@@ -229,8 +234,8 @@ const How = () => {
       <div className="mx-auto max-w-7xl px-6">
         <div className="flex items-end justify-between flex-wrap gap-4">
           <div>
-            <p className="font-scribble text-2xl text-plum">~ three taps. one ride. zero stress. ~</p>
-            <h2 className="font-marker text-5xl md:text-6xl mt-2">How it <span className="scribble">works</span></h2>
+            <p className="font-scribble text-2xl text-plum gsap-heading">~ three taps. one ride. zero stress. ~</p>
+            <h2 className="font-marker text-5xl md:text-6xl mt-2 gsap-heading">How it <span className="scribble">works</span></h2>
           </div>
           <p className="font-body text-xl text-ink/90 max-w-md">
             Built so chaotic college calendars don&apos;t break it. (We tested it during finals week.)
@@ -241,12 +246,9 @@ const How = () => {
           {steps.map((s, i) => (
             <motion.div
               key={s.n}
-              initial={{ opacity: 0, y: 30, rotate: i % 2 ? -2 : 2 }}
-              whileInView={{ opacity: 1, y: 0, rotate: i % 2 ? -1.5 : 1.5 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ delay: i * 0.12, type: "spring" as const, stiffness: 80 }}
-              whileHover={{ rotate: 0, scale: 1.02 }}
-              className="sketch-card"
+              whileHover={{ rotate: 0, scale: 1.03, y: -4 }}
+              transition={{ type: "spring" as const, stiffness: 260, damping: 18 }}
+              className="sketch-card gsap-card"
               style={{ background: "#fffdf5" }}
               data-testid={`how-step-${i}`}
             >
@@ -280,8 +282,8 @@ const Why = () => {
     <section id="why" className="relative py-24 paper" data-testid="section-why">
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center max-w-2xl mx-auto">
-          <p className="font-scribble text-2xl text-tomato">six reasons (we counted)</p>
-          <h2 className="font-marker text-5xl md:text-6xl mt-2">
+          <p className="font-scribble text-2xl text-tomato gsap-heading">six reasons (we counted)</p>
+          <h2 className="font-marker text-5xl md:text-6xl mt-2 gsap-heading">
             Why students <span className="marker">love</span> us
           </h2>
           <p className="font-body text-xl text-ink/90 mt-5">
@@ -293,12 +295,9 @@ const Why = () => {
           {cards.map((c, i) => (
             <motion.div
               key={c.t}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-80px" }}
-              transition={{ delay: (i % 3) * 0.08 }}
-              whileHover={{ y: -6, rotate: i % 2 ? -1 : 1 }}
-              className="sketch-card"
+              whileHover={{ y: -7, rotate: i % 2 ? -1.2 : 1.2, scale: 1.02 }}
+              transition={{ type: "spring" as const, stiffness: 300, damping: 20 }}
+              className="sketch-card gsap-card"
               data-testid={`why-card-${i}`}
             >
               <div className="flex items-center gap-4">
@@ -330,8 +329,8 @@ const Voices = () => {
 
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center">
-          <p className="font-scribble text-2xl text-leaf">notes from the back-seat</p>
-          <h2 className="font-marker text-5xl md:text-6xl mt-2">
+          <p className="font-scribble text-2xl text-leaf gsap-heading">notes from the back-seat</p>
+          <h2 className="font-marker text-5xl md:text-6xl mt-2 gsap-heading">
             What riders are <span className="scribble">scribbling</span>
           </h2>
         </div>
@@ -340,12 +339,10 @@ const Voices = () => {
           {quotes.map((qq, i) => (
             <motion.div
               key={qq.n}
-              initial={{ opacity: 0, y: 30, rotate: i % 2 ? 2 : -2 }}
-              whileInView={{ opacity: 1, y: 0, rotate: i % 2 ? 1.2 : -1.2 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="sketch-card relative"
-              style={{ background: qq.color }}
+              style={{ background: qq.color, rotate: i % 2 ? 1.2 : -1.2 }}
+              whileHover={{ rotate: 0, scale: 1.02, y: -5 }}
+              transition={{ type: "spring" as const, stiffness: 280, damping: 18 }}
+              className="sketch-card relative gsap-card"
               data-testid={`voice-${i}`}
             >
               <div className="absolute -top-7 -left-3 w-16 mascot-wobble">
@@ -376,8 +373,8 @@ const FAQ = () => {
     <section id="faq" className="relative py-24 paper" data-testid="section-faq">
       <div className="mx-auto max-w-4xl px-6">
         <div className="text-center">
-          <p className="font-scribble text-2xl text-plum">questions, scribbled</p>
-          <h2 className="font-marker text-5xl md:text-6xl mt-2">FAQ <span className="marker">corner</span></h2>
+          <p className="font-scribble text-2xl text-plum gsap-heading">questions, scribbled</p>
+          <h2 className="font-marker text-5xl md:text-6xl mt-2 gsap-heading">FAQ <span className="marker">corner</span></h2>
         </div>
         <div className="mt-12 space-y-4">
           {items.map((it, i) => (
@@ -431,8 +428,8 @@ const Join = () => {
         <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-72 -z-10 opacity-70">
           <BlobDoodle color="#FFD23F" className="w-full" />
         </div>
-        <p className="font-scribble text-2xl text-tomato">last stop ↓</p>
-        <h2 className="font-marker text-5xl md:text-7xl mt-2 leading-[0.95]">
+        <p className="font-scribble text-2xl text-tomato gsap-heading">last stop ↓</p>
+        <h2 className="font-marker text-5xl md:text-7xl mt-2 leading-[0.95] gsap-heading">
           Hop in. <br /> <span className="scribble">Let&apos;s roll.</span>
         </h2>
         <p className="font-body text-xl mt-6 text-ink">
@@ -512,8 +509,43 @@ const Footer = () => (
 );
 
 export default function Home() {
-  // tiny cursor sparkle effect (subtle, performant)
   useEffect(() => {
+    // ── Lenis smooth scroll, ticked by GSAP ──────────────────
+    const lenis = new Lenis({
+      duration: 1.35,
+      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+    });
+    gsap.ticker.add((time) => lenis.raf(time * 1000));
+    gsap.ticker.lagSmoothing(0);
+    lenis.on("scroll", ScrollTrigger.update);
+
+    // ── GSAP section heading reveals ─────────────────────────
+    const headings = gsap.utils.toArray<HTMLElement>(".gsap-heading");
+    headings.forEach((el) => {
+      gsap.fromTo(
+        el,
+        { opacity: 0, y: 48, clipPath: "inset(0 0 100% 0)" },
+        {
+          opacity: 1, y: 0, clipPath: "inset(0 0 0% 0)",
+          duration: 0.9, ease: "power3.out",
+          scrollTrigger: { trigger: el, start: "top 88%", toggleActions: "play none none none" },
+        }
+      );
+    });
+
+    // ── GSAP staggered card batch reveal ─────────────────────
+    ScrollTrigger.batch(".gsap-card", {
+      start: "top 90%",
+      onEnter: (batch) =>
+        gsap.fromTo(
+          batch,
+          { opacity: 0, y: 40, scale: 0.96 },
+          { opacity: 1, y: 0, scale: 1, stagger: 0.1, duration: 0.65, ease: "back.out(1.4)" }
+        ),
+    });
+
+    // ── Cursor sparkle ────────────────────────────────────────
     let last = 0;
     const handler = (e: MouseEvent) => {
       const now = Date.now();
@@ -534,7 +566,13 @@ export default function Home() {
       setTimeout(() => dot.remove(), 800);
     };
     window.addEventListener("mousemove", handler);
-    return () => window.removeEventListener("mousemove", handler);
+
+    return () => {
+      lenis.destroy();
+      ScrollTrigger.getAll().forEach((t) => t.kill());
+      gsap.ticker.remove((time) => lenis.raf(time * 1000));
+      window.removeEventListener("mousemove", handler);
+    };
   }, []);
 
   return (

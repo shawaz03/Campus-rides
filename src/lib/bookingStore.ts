@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { RideType } from "./mockData";
+import type { RideType } from "./ride-data";
 
 interface BookingState {
   pickup: { name: string; coords: [number, number] } | null;

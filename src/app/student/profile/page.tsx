@@ -16,8 +16,9 @@ import {
   Moon,
   Heart,
 } from "lucide-react";
-import { mockStudent, rideTypeInfo, type RideType } from "@/lib/mockData";
+import { rideTypeInfo, type RideType } from "@/lib/mockData";
 import { CoinDoodle, StarDoodle, SquiggleDoodle, ArrowDoodle } from "@/components/doodles";
+import { useStudent } from "@/hooks/use-student";
 
 const SAFETY = [
   {
@@ -46,7 +47,7 @@ const SAFETY = [
   },
 ];
 
-const PREFS = [
+const PREFS_DEFAULT = [
   { id: "notif", label: "Ride notifications", icon: Bell, on: true },
   { id: "darkride", label: "Dark mode while riding", icon: Moon, on: false },
   { id: "pool", label: "Auto-suggest campus pool", icon: Heart, on: true },
@@ -73,9 +74,56 @@ function Toggle({ on, onChange, testId }: { on: boolean; onChange: () => void; t
   );
 }
 
+// Derive initials from a name or fall back to email initial.
+function getInitials(name: string | null | undefined, email: string | null | undefined): string {
+  if (name && name.trim()) {
+    return name
+      .trim()
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  }
+  return email ? email[0].toUpperCase() : "?";
+}
+
+// Resolve emergency contact display name from the stored value (object or plain string).
+function emergencyName(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === "object" && value !== null) {
+    const obj = value as Record<string, unknown>;
+    return typeof obj.name === "string" ? obj.name : null;
+  }
+  if (typeof value === "string" && value.trim()) return value.trim();
+  return null;
+}
+
 export default function ProfilePage() {
-  const [prefs, setPrefs] = useState(PREFS);
-  const [fav, setFav] = useState(mockStudent.favouriteRide);
+  const { data, isLoading } = useStudent();
+  const [prefs, setPrefs] = useState(PREFS_DEFAULT);
+  const [fav, setFav] = useState<RideType>("auto");
+
+  // Resolved identity fields
+  const name = data?.profile?.name ?? data?.user?.name ?? null;
+  const email = data?.profile?.email ?? data?.user?.email ?? null;
+  const initials = getInitials(name, email);
+  const displayName = name ?? email ?? "Student";
+  const emergencyContactName = emergencyName(data?.profile?.emergencyContact);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8" data-testid="page-profile">
+        <header>
+          <p className="font-scribble text-2xl text-tomato">~ that&apos;s you, friend ~</p>
+          <h1 className="font-marker text-4xl sm:text-5xl">Your <span className="marker">profile</span></h1>
+        </header>
+        <div className="flex items-center justify-center py-16">
+          <p className="font-hand text-xl text-ink/60 animate-pulse">Loading your profile…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8" data-testid="page-profile">
@@ -99,9 +147,9 @@ export default function ProfilePage() {
             <div className="relative">
               <span
                 className="w-28 h-28 grid place-items-center rounded-full border-[3px] border-ink font-marker text-4xl text-white"
-                style={{ background: mockStudent.avatarColor, boxShadow: "5px 5px 0 #1B1B1F" }}
+                style={{ background: "#FF5A36", boxShadow: "5px 5px 0 #1B1B1F" }}
               >
-                {mockStudent.name.split(" ").map((n) => n[0]).join("")}
+                {initials}
               </span>
               <span className="absolute -bottom-1 -right-1 w-9 h-9 grid place-items-center bg-leaf rounded-full border-[2.5px] border-ink">
                 <BadgeCheck size={16} strokeWidth={2.5} />
@@ -110,22 +158,26 @@ export default function ProfilePage() {
             <p className="mt-3 font-scribble text-tomato text-lg">verified student</p>
           </div>
           <div className="md:col-span-9">
-            <h2 className="font-marker text-3xl sm:text-4xl">{mockStudent.name}</h2>
+            <h2 className="font-marker text-3xl sm:text-4xl">{displayName}</h2>
             <p className="font-hand text-lg text-ink/80 flex items-center gap-2 mt-1">
-              <GraduationCap size={16} /> {mockStudent.college}
+              <GraduationCap size={16} /> Campus Rides Student
             </p>
             <div className="mt-4 grid sm:grid-cols-2 gap-3 font-hand text-base">
+              {email && (
+                <div className="flex items-center gap-2">
+                  <Mail size={14} className="text-tomato" /> {email}
+                </div>
+              )}
               <div className="flex items-center gap-2">
-                <Mail size={14} className="text-tomato" /> {mockStudent.email}
+                <Phone size={14} className="text-tomato" />
+                <span className="text-ink/60 italic">not set</span>
               </div>
               <div className="flex items-center gap-2">
-                <Phone size={14} className="text-tomato" /> {mockStudent.phone}
+                <BadgeCheck size={14} className="text-tomato" /> ID:{" "}
+                <span className="font-marker">{data?.profile?.id?.slice(0, 8) ?? "—"}</span>
               </div>
               <div className="flex items-center gap-2">
-                <BadgeCheck size={14} className="text-tomato" /> ID: <span className="font-marker">{mockStudent.studentId}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Bike size={14} className="text-tomato" /> {mockStudent.branch} • {mockStudent.year}
+                <Bike size={14} className="text-tomato" /> Campus Rides Member
               </div>
             </div>
           </div>
@@ -142,7 +194,7 @@ export default function ProfilePage() {
           <SquiggleDoodle className="w-24 h-4" color="#9B5DE5" />
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {(Object.keys(rideTypeInfo) as RideType[]).map((t) => {
+          {(Object.keys(rideTypeInfo) as RideType[]).map((t) => {
             const info = rideTypeInfo[t];
             const active = fav === t;
             return (
@@ -176,9 +228,11 @@ export default function ProfilePage() {
             <p className="font-scribble text-xl text-tomato">~ peace of mind ~</p>
             <h3 className="font-marker text-2xl">Safety features</h3>
           </div>
-          <p className="font-hand text-base text-ink/60">
-            emergency contact: <span className="font-marker">{mockStudent.emergencyContact.name}</span>
-          </p>
+          {emergencyContactName && (
+            <p className="font-hand text-base text-ink/60">
+              emergency contact: <span className="font-marker">{emergencyContactName}</span>
+            </p>
+          )}
         </div>
         <div className="grid md:grid-cols-3 gap-5">
           {SAFETY.map((s, i) => (

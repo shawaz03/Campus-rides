@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Home,
@@ -14,7 +14,8 @@ import {
   LogOut,
 } from "lucide-react";
 import { useState } from "react";
-import { mockStudent } from "@/lib/mockData";
+import { useStudent } from "@/hooks/use-student";
+import { createClient } from "@/lib/supabase/client";
 
 const NAV = [
   { href: "/student", label: "Home", icon: Home, color: "#FFD23F", testId: "nav-home" },
@@ -24,14 +25,54 @@ const NAV = [
   { href: "/student/profile", label: "Profile", icon: User, color: "#9B5DE5", testId: "nav-profile" },
 ];
 
+// Derive initials from a display name or email.
+function getInitials(name: string | null | undefined, email: string | null | undefined): string {
+  if (name && name.trim()) {
+    return name
+      .trim()
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  }
+  if (email) {
+    return email[0].toUpperCase();
+  }
+  return "?";
+}
+
+// Pick the best available display name.
+function getDisplayName(name: string | null | undefined, email: string | null | undefined): string {
+  if (name && name.trim()) return name.trim().split(" ")[0];
+  if (email) return email.split("@")[0];
+  return "You";
+}
+
 export default function StudentSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [lastPath, setLastPath] = useState(pathname);
+  const { data } = useStudent();
+
   if (pathname !== lastPath) {
     setLastPath(pathname);
     if (open) setOpen(false);
   }
+
+  // Resolve user info — prefer profile.name > user.name > user.email
+  const name =
+    data?.profile?.name ?? data?.user?.name ?? null;
+  const email = data?.user?.email ?? null;
+  const initials = getInitials(name, email);
+  const displayFirst = getDisplayName(name, email);
+
+  const handleSignOut = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/auth");
+  };
 
   return (
     <>
@@ -136,22 +177,24 @@ export default function StudentSidebar() {
             <div className="flex items-center gap-3">
               <span
                 className="w-11 h-11 rounded-full border-[2.5px] border-ink grid place-items-center font-marker text-lg"
-                style={{ background: mockStudent.avatarColor, color: "#fff", boxShadow: "2px 2px 0 #1B1B1F" }}
+                style={{ background: "#FF5A36", color: "#fff", boxShadow: "2px 2px 0 #1B1B1F" }}
               >
-                {mockStudent.name.split(" ").map((n) => n[0]).join("")}
+                {initials}
               </span>
-              <div className="leading-tight">
-                <p className="font-marker text-base">{mockStudent.name.split(" ")[0]}</p>
-                <p className="font-scribble text-tomato text-base">~ {mockStudent.year} ~</p>
+              <div className="leading-tight overflow-hidden">
+                <p className="font-marker text-base truncate">{displayFirst}</p>
+                <p className="font-scribble text-tomato text-base truncate">
+                  {email ? `~ ${email.split("@")[0]} ~` : "~ student ~"}
+                </p>
               </div>
             </div>
-            <Link
-              href="/"
-              className="mt-3 flex items-center justify-center gap-2 px-3 py-2 border-[2px] border-ink rounded-full font-hand text-base bg-cream hover:bg-sun transition-colors"
+            <button
+              onClick={handleSignOut}
+              className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 border-[2px] border-ink rounded-full font-hand text-base bg-cream hover:bg-sun transition-colors"
               data-testid="sidebar-logout"
             >
               <LogOut size={14} /> Sign out
-            </Link>
+            </button>
           </div>
         </div>
       </aside>

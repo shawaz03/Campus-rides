@@ -15,8 +15,9 @@ import {
   PaperPlane,
   HeartDoodle,
 } from "@/components/doodles";
-import { mockDrivers, mockStudent, mockRides } from "@/lib/mockData";
 import { Shield, Sparkles, TrendingUp, Zap, Clock } from "lucide-react";
+import { useStudent } from "@/hooks/use-student";
+import type { StudentDriver } from "@/lib/student-types";
 
 const HOTSPOTS = [
   { name: "Secunderabad Station", time: "18 min", fare: "₹142", color: "#FFD23F" },
@@ -25,9 +26,79 @@ const HOTSPOTS = [
   { name: "Charminar", time: "14 min", fare: "₹95", color: "#FFB4A2" },
 ];
 
+// Derive first name from a full name or email.
+function getFirstName(name: string | null | undefined, email: string | null | undefined): string {
+  if (name && name.trim()) return name.trim().split(" ")[0];
+  if (email) return email.split("@")[0];
+  return "friend";
+}
+
+// Pick a deterministic avatar colour per driver id.
+const DRIVER_COLOURS = ["#FFD23F", "#5BC0EB", "#7BC950", "#9B5DE5", "#FFB4A2", "#FF5A36"];
+function driverColour(id: string, index: number) {
+  const code = id.charCodeAt(0) + id.charCodeAt(id.length - 1);
+  return DRIVER_COLOURS[(code + index) % DRIVER_COLOURS.length];
+}
+
+function DriverCard({ driver, index }: { driver: StudentDriver; index: number }) {
+  const color = driverColour(driver.id, index);
+  const initial = driver.name ? driver.name[0].toUpperCase() : "?";
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.05 * index }}
+      whileHover={{ y: -3 }}
+      className="border-[2.5px] border-ink rounded-[22px_8px_22px_10px/10px_22px_8px_22px] p-4 bg-cream"
+      style={{ boxShadow: "3px 3px 0 #1B1B1F" }}
+      data-testid={`driver-${index}`}
+    >
+      <div className="flex items-center gap-3">
+        <span
+          className="w-12 h-12 grid place-items-center rounded-full border-[2.5px] border-ink font-marker text-base"
+          style={{ background: color, boxShadow: "2px 2px 0 #1B1B1F" }}
+        >
+          {initial}
+        </span>
+        <div className="leading-tight">
+          <p className="font-marker text-lg flex items-center gap-1">
+            {driver.name ?? "Driver"}{" "}
+            {driver.isTrusted && (
+              <span className="text-leaf" title="trusted">
+                <HeartDoodle className="w-4 h-4" />
+              </span>
+            )}
+          </p>
+          <p className="font-hand text-sm text-ink/70">{driver.vehicleType ?? "—"}</p>
+        </div>
+      </div>
+      <div className="mt-3 flex items-center justify-between font-hand text-base">
+        <span>★ {driver.rating?.toFixed(1) ?? "—"}</span>
+        <motion.span
+          className="font-marker text-tomato"
+          animate={{ y: [0, -2, 0] }}
+          transition={{ duration: 1.6, repeat: Infinity, delay: index * 0.2 }}
+        >
+          nearby
+        </motion.span>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function StudentHome() {
-  const firstName = mockStudent.name.split(" ")[0];
-  const activeRide = mockRides.find((r) => r.status === "active");
+  const { data, isLoading } = useStudent();
+
+  // Resolved values from real data.
+  const name = data?.profile?.name ?? data?.user?.name ?? null;
+  const email = data?.user?.email ?? null;
+  const firstName = getFirstName(name, email);
+
+  const totalRides = data?.rides?.length ?? 0;
+  const walletBalance = data?.profile?.coinsBalance ?? null;
+  const trustedDriverCount = (data?.drivers ?? []).filter((d) => d.isTrusted).length;
+  const activeRide = (data?.rides ?? []).find((r) => r.status === "active");
+  const drivers = data?.drivers ?? [];
 
   return (
     <div className="space-y-10" data-testid="page-home">
@@ -48,7 +119,11 @@ export default function StudentHome() {
             className="font-marker text-4xl sm:text-5xl leading-[1]"
             data-testid="greeting"
           >
-            Hey <span className="marker">{firstName}</span>, where to today?
+            {isLoading ? (
+              "Hey there, where to today?"
+            ) : (
+              <>Hey <span className="marker">{firstName}</span>, where to today?</>
+            )}
           </motion.h1>
         </div>
         <div
@@ -57,7 +132,11 @@ export default function StudentHome() {
         >
           <Sparkles size={16} className="text-tomato" />
           <span className="font-hand text-lg">
-            <span className="font-marker">{mockStudent.totalRides}</span> rides so far
+            {isLoading ? (
+              "loading rides…"
+            ) : (
+              <><span className="font-marker">{totalRides}</span> rides so far</>
+            )}
           </span>
         </div>
       </header>
@@ -109,7 +188,11 @@ export default function StudentHome() {
               className="absolute -bottom-4 left-2 bg-cream border-[2.5px] border-ink px-3 py-2 font-hand text-base"
               style={{ boxShadow: "4px 4px 0 #1B1B1F" }}
             >
-              ₹<span className="font-marker text-tomato">285</span> in wallet
+              {walletBalance !== null ? (
+                <>₹<span className="font-marker text-tomato">{walletBalance}</span> in wallet</>
+              ) : (
+                <span className="font-marker text-tomato">wallet</span>
+              )}
             </motion.div>
             <motion.div
               initial={{ scale: 0.4, opacity: 0 }}
@@ -128,7 +211,13 @@ export default function StudentHome() {
         {[
           { icon: Zap, label: "Avg pickup", value: "4 min", color: "#FFD23F", note: "around your campus" },
           { icon: TrendingUp, label: "Saved this month", value: "₹1,240", color: "#7BC950", note: "vs solo rides" },
-          { icon: Shield, label: "Trusted drivers", value: `${mockStudent.trustedDrivers} nearby`, color: "#5BC0EB", note: "all verified" },
+          {
+            icon: Shield,
+            label: "Trusted drivers",
+            value: isLoading ? "…" : `${trustedDriverCount} nearby`,
+            color: "#5BC0EB",
+            note: "all verified",
+          },
         ].map((s, i) => (
           <motion.div
             key={s.label}
@@ -222,50 +311,17 @@ export default function StudentHome() {
           )}
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {mockDrivers.map((d, i) => (
-            <motion.div
-              key={d.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 * i }}
-              whileHover={{ y: -3 }}
-              className="border-[2.5px] border-ink rounded-[22px_8px_22px_10px/10px_22px_8px_22px] p-4 bg-cream"
-              style={{ boxShadow: "3px 3px 0 #1B1B1F" }}
-              data-testid={`driver-${i}`}
-            >
-              <div className="flex items-center gap-3">
-                <span
-                  className="w-12 h-12 grid place-items-center rounded-full border-[2.5px] border-ink font-marker text-base"
-                  style={{ background: d.color, boxShadow: "2px 2px 0 #1B1B1F" }}
-                >
-                  {d.name.split(" ")[0][0]}
-                </span>
-                <div className="leading-tight">
-                  <p className="font-marker text-lg flex items-center gap-1">
-                    {d.name}{" "}
-                    {d.trusted && (
-                      <span className="text-leaf" title="trusted">
-                        <HeartDoodle className="w-4 h-4" />
-                      </span>
-                    )}
-                  </p>
-                  <p className="font-hand text-sm text-ink/70">{d.vehicle}</p>
-                </div>
-              </div>
-              <div className="mt-3 flex items-center justify-between font-hand text-base">
-                <span>★ {d.rating}</span>
-                <motion.span
-                  className="font-marker text-tomato"
-                  animate={{ y: [0, -2, 0] }}
-                  transition={{ duration: 1.6, repeat: Infinity, delay: i * 0.2 }}
-                >
-                  {d.eta} min
-                </motion.span>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        {isLoading ? (
+          <p className="font-hand text-lg text-ink/60 py-4">Finding drivers near you…</p>
+        ) : drivers.length === 0 ? (
+          <p className="font-hand text-lg text-ink/60 py-4">No drivers online right now. Check back soon!</p>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {drivers.map((d, i) => (
+              <DriverCard key={d.id} driver={d} index={i} />
+            ))}
+          </div>
+        )}
 
         {/* dashed animated road */}
         <div className="mt-6 h-3 dashed-road relative overflow-hidden">

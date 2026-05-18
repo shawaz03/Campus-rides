@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { DEFAULT_CENTER } from "@/lib/mockData";
+import { DEFAULT_CENTER } from "@/lib/ride-data";
 
 interface RideMapProps {
   pickup: { name: string; coords: [number, number] } | null;

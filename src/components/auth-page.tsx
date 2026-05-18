@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import gsap from "gsap";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -282,6 +283,7 @@ function GoogleMark() {
 /* ────────────────────────────────────────────────────────────────── */
 
 export default function AuthPage() {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [role, setRole] = useState<Role>("student");
   const [showPassword, setShowPassword] = useState(false);
@@ -317,17 +319,19 @@ export default function AuthPage() {
     setFormNotice(null);
   }, [role]);
 
+  const destination = role === "driver" ? "/driver" : "/student";
+
   const handleGoogleSignIn = async () => {
     if (isOAuthLoading) return;
     setFormError(null);
     setFormNotice(null);
     setIsOAuthLoading(true);
     const origin = window.location.origin;
+    const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(destination)}`;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${origin}/auth/callback`,
-        queryParams: { role },
+        redirectTo,
       },
     });
     if (error) {
@@ -359,7 +363,8 @@ export default function AuthPage() {
         setFormError(error.message);
         return;
       }
-      setFormNotice("Logged in successfully.");
+      // Redirect to the student dashboard on success.
+      router.push(destination);
     } finally {
       setIsSubmitting(false);
     }

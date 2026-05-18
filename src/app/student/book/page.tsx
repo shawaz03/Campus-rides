@@ -16,7 +16,7 @@ import {
   DEFAULT_CENTER,
   rideTypeInfo,
   type RideType,
-} from "@/lib/mockData";
+} from "@/lib/ride-data";
 import {
   PinDoodle,
   CoinDoodle,
@@ -37,6 +37,13 @@ function haversine([lng1, lat1]: [number, number], [lng2, lat2]: [number, number
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+type PlaceOption = {
+  id?: string;
+  name: string;
+  coords: [number, number];
+  source: "campus" | "search";
+};
+
 function PlacePicker({
   label,
   testId,
@@ -56,13 +63,79 @@ function PlacePicker({
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
-  const list = useMemo(
+  const [liveResults, setLiveResults] = useState<PlaceOption[]>([]);
+  const [liveStatus, setLiveStatus] = useState<"idle" | "loading" | "error">("idle");
+  const rawQuery = q.trim();
+  const query = rawQuery.toLowerCase();
+  const shouldSearchLive = rawQuery.length >= 2;
+
+  const campusMatches = useMemo(
     () =>
       campusPlaces
         .filter((p) => p.id !== excludeId)
-        .filter((p) => p.name.toLowerCase().includes(q.toLowerCase())),
-    [q, excludeId]
+        .filter((p) => p.name.toLowerCase().includes(query))
+        .map((p) => ({
+          id: p.id,
+          name: p.name,
+          coords: p.coords,
+          source: "campus" as const,
+        })),
+    [query, excludeId]
   );
+
+  useEffect(() => {
+    if (!open) {
+      setLiveResults([]);
+      setLiveStatus("idle");
+      return;
+    }
+
+    if (!shouldSearchLive) {
+      setLiveResults([]);
+      setLiveStatus("idle");
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(async () => {
+      setLiveStatus("loading");
+      try {
+        const res = await fetch(`/api/geocode?q=${encodeURIComponent(rawQuery)}`, {
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          throw new Error("geocode failed");
+        }
+        const data = (await res.json()) as { results?: Array<{ name: string; coords: [number, number] }> };
+        const results = Array.isArray(data.results) ? data.results : [];
+        setLiveResults(
+          results
+            .map((item) => ({
+              name: item.name,
+              coords: item.coords,
+              source: "search" as const,
+            }))
+            .filter((item) => item.name && item.coords?.length === 2)
+        );
+        setLiveStatus("idle");
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setLiveResults([]);
+        setLiveStatus("error");
+      }
+    }, 1000);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeout);
+    };
+  }, [open, rawQuery, shouldSearchLive]);
+
+  const displayList: PlaceOption[] = shouldSearchLive
+    ? (campusMatches as PlaceOption[]).concat(liveResults)
+    : (campusMatches as PlaceOption[]);
+  const showSearchError = shouldSearchLive && liveStatus === "error" && campusMatches.length === 0;
+  const showEmpty = displayList.length === 0 && liveStatus !== "loading" && !showSearchError;
   return (
     <div className="relative" data-testid={testId}>
       <label className="font-scribble text-base text-tomato">{label}</label>
@@ -105,19 +178,27 @@ function PlacePicker({
               />
             </div>
             <div className="mt-2 max-h-56 overflow-y-auto">
-              {list.length === 0 && (
-                <p className="font-hand text-base text-ink/60 px-2 py-3">nothing here yet ✿</p>
+              {shouldSearchLive && liveStatus === "loading" && (
+                <p className="font-hand text-base text-ink/60 px-2 py-2">Searching...</p>
               )}
-              {list.map((p) => (
+              {showSearchError && (
+                <p className="font-hand text-base text-ink/60 px-2 py-2">Search unavailable. Try again.</p>
+              )}
+              {showEmpty && (
+                <p className="font-hand text-base text-ink/60 px-2 py-3">
+                  {rawQuery.length < 2 ? "Type at least 2 letters to search." : "No matches."}
+                </p>
+              )}
+              {displayList.map((p, index) => (
                 <button
-                  key={p.id}
+                  key={p.id ?? `${p.source}-${index}`}
                   onClick={() => {
                     onChange({ name: p.name, coords: p.coords });
                     setOpen(false);
                     setQ("");
                   }}
                   className="w-full text-left px-3 py-2 rounded-xl hover:bg-sun/40 transition-colors font-hand text-lg flex items-center gap-2"
-                  data-testid={`${testId}-option-${p.id}`}
+                  data-testid={`${testId}-option-${p.id ?? `search-${index}`}`}
                 >
                   <span className="text-tomato">◉</span>
                   {p.name}
