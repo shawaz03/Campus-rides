@@ -25,6 +25,7 @@ import {
   ArrowDoodle,
 } from "@/components/doodles";
 import RideMap from "@/components/student/RideMap";
+import { createClient } from "@/lib/supabase/client";
 
 function haversine([lng1, lat1]: [number, number], [lng2, lat2]: [number, number]) {
   const R = 6371;
@@ -219,6 +220,7 @@ const FEATURES = [
 ];
 
 export default function BookRidePage() {
+  const supabase = useMemo(() => createClient(), []);
   const {
     pickup,
     destination,
@@ -251,15 +253,55 @@ export default function BookRidePage() {
   }, [distanceKm, rideType]);
 
   const [booking, setBooking] = useState<"idle" | "confirming" | "booked">("idle");
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "upi">("cash");
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const onBook = () => {
-    if (!pickup || !destination) return;
+  const onBook = async () => {
+    if (!pickup || !destination || booking === "confirming") return;
+    setBookingError(null);
     setBooking("confirming");
-    setTimeout(() => setBooking("booked"), 1500);
+
+    const { data: authData } = await supabase.auth.getUser();
+    const user = authData.user;
+
+    if (!user) {
+      setBooking("idle");
+      setBookingError("Please sign in to request a ride.");
+      return;
+    }
+
+    const durationMinutes = Math.max(
+      4,
+      Math.round((distanceKm / (rideType === "bike" ? 28 : rideType === "auto" ? 22 : 26)) * 60)
+    );
+
+    const res = await fetch("/api/rides", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pickupLabel: pickup.name,
+        destinationLabel: destination.name,
+        rideType,
+        distanceKm,
+        durationMin: durationMinutes,
+        fare,
+        scheduledAt: scheduled ? scheduledFor || null : null,
+        paymentMethod,
+      }),
+    });
+
+    if (!res.ok) {
+      const data = (await res.json().catch(() => null)) as { error?: string } | null;
+      setBooking("idle");
+      setBookingError(data?.error ?? "Could not place the request. Please try again.");
+      return;
+    }
+
+    setBooking("booked");
   };
 
   return (
@@ -400,16 +442,70 @@ export default function BookRidePage() {
             <SquiggleDoodle className="absolute bottom-2 left-4 w-24 h-4" color="#FF5A36" />
           </motion.div>
 
-          <button
-            onClick={onBook}
-            disabled={!pickup || !destination || booking === "confirming"}
-            className="sketch-btn sketch-btn--tomato w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-            data-testid="confirm-book-btn"
+          <div
+            className="border-[2.5px] border-ink rounded-[28px_10px_24px_12px/12px_24px_10px_28px] p-5 bg-white"
+            style={{ boxShadow: "6px 6px 0 #1B1B1F" }}
+            data-testid="payment-card"
           >
-            {booking === "idle" && (<>Confirm ride <ArrowDoodle className="w-7 h-5" color="#fff" /></>)}
-            {booking === "confirming" && "finding your driver…"}
-            {booking === "booked" && "✓ booked! see Activity →"}
-          </button>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-scribble text-xl text-plum">~ payment ~</p>
+                <h3 className="font-marker text-2xl mt-1">Choose a mode</h3>
+              </div>
+              <div className="w-10 float-b">
+                <CoinDoodle />
+              </div>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              {([
+                { id: "cash", label: "Cash" },
+                { id: "upi", label: "UPI" },
+              ] as const).map((method) => (
+                <label
+                  key={method.id}
+                  className="flex items-center gap-3 px-4 py-3 rounded-full border-[2.5px] border-ink font-hand text-lg cursor-pointer"
+                  style={{
+                    background: paymentMethod === method.id ? "#FFD23F" : "#FDF6E3",
+                    boxShadow: paymentMethod === method.id ? "3px 3px 0 #1B1B1F" : "2px 2px 0 #1B1B1F",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="payment-method"
+                    value={method.id}
+                    checked={paymentMethod === method.id}
+                    onChange={() => setPaymentMethod(method.id)}
+                    className="accent-tomato w-4 h-4"
+                  />
+                  {method.label}
+                </label>
+              ))}
+            </div>
+
+            <div className="mt-4 flex items-center justify-between font-hand text-base text-ink/70">
+              <span>Platform fee</span>
+              <span>10% included</span>
+            </div>
+
+            <button
+              onClick={onBook}
+              disabled={!pickup || !destination || booking === "confirming" || fare === 0}
+              className="mt-4 sketch-btn sketch-btn--tomato w-full justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              data-testid="confirm-book-btn"
+            >
+              {booking === "idle" && (
+                <>Pay ₹{fare || "—"} & request <ArrowDoodle className="w-7 h-5" color="#fff" /></>
+              )}
+              {booking === "confirming" && "processing payment…"}
+              {booking === "booked" && "✓ booked! see Activity →"}
+            </button>
+            {bookingError && (
+              <p className="mt-3 font-hand text-base text-tomato text-center" data-testid="booking-error">
+                {bookingError}
+              </p>
+            )}
+          </div>
         </section>
 
         {/* ── Map ── */}

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   MapPin,
@@ -14,19 +14,43 @@ import {
   Star,
   Navigation,
 } from "lucide-react";
-import { mockRides, type MockRide } from "@/lib/mockData";
 import { SquiggleDoodle, CoinDoodle, StarDoodle, ArrowDoodle, PinDoodle } from "@/components/doodles";
+import { useStudent } from "@/hooks/use-student";
+import type { StudentRide } from "@/lib/student-types";
 
-const STATUS_CONFIG = {
+type StatusKey = "requested" | "active" | "scheduled" | "completed" | "cancelled";
+
+const STATUS_CONFIG: Record<StatusKey, { label: string; color: string; bg: string; icon: typeof Calendar }> = {
+  requested: { label: "Requested", color: "#9B5DE5", bg: "#9B5DE5", icon: MapPin },
   active: { label: "In progress", color: "#7BC950", bg: "#7BC950", icon: Navigation },
   scheduled: { label: "Scheduled", color: "#5BC0EB", bg: "#5BC0EB", icon: Calendar },
   completed: { label: "Completed", color: "#FFD23F", bg: "#FFD23F", icon: CheckCircle2 },
   cancelled: { label: "Cancelled", color: "#FFB4A2", bg: "#FFB4A2", icon: XCircle },
 };
 
-function RideCard({ ride, index }: { ride: MockRide; index: number }) {
-  const [expanded, setExpanded] = useState(ride.status === "active");
-  const cfg = STATUS_CONFIG[ride.status];
+const TABS = ["all", "requested", "active", "scheduled", "completed", "cancelled"] as const;
+type TabKey = (typeof TABS)[number];
+
+const resolveStatus = (ride: StudentRide): StatusKey => {
+  if (ride.status === "requested" && ride.scheduledAt) return "scheduled";
+  if (ride.status === "requested") return "requested";
+  if (ride.status === "active") return "active";
+  if (ride.status === "completed") return "completed";
+  if (ride.status === "cancelled") return "cancelled";
+  return "requested";
+};
+
+const parseDistanceKm = (value: string | null) => {
+  if (!value) return 0;
+  const numeric = Number.parseFloat(value.replace(/[^0-9.]/g, ""));
+  return Number.isFinite(numeric) ? numeric : 0;
+};
+
+function RideCard({ ride, index }: { ride: StudentRide; index: number }) {
+  const status = resolveStatus(ride);
+  const [expanded, setExpanded] = useState(status === "active");
+  const cfg = STATUS_CONFIG[status];
+  const driverColor = ride.driver?.color ?? "#FFD23F";
   const StatusIcon = cfg.icon;
 
   return (
@@ -54,7 +78,7 @@ function RideCard({ ride, index }: { ride: MockRide; index: number }) {
         {ride.completedAt && (
           <span className="text-ink/70">{ride.completedAt}</span>
         )}
-        {ride.status === "active" && (
+        {status === "active" && (
           <motion.span
             className="flex items-center gap-1 text-ink"
             animate={{ opacity: [1, 0.4, 1] }}
@@ -77,29 +101,29 @@ function RideCard({ ride, index }: { ride: MockRide; index: number }) {
           <div className="flex-1 space-y-2">
             <div>
               <p className="font-hand text-sm text-ink/60">from</p>
-              <p className="font-marker text-lg leading-tight">{ride.pickup}</p>
+              <p className="font-marker text-lg leading-tight">{ride.pickupLabel ?? "Pickup"}</p>
             </div>
             <div>
               <p className="font-hand text-sm text-ink/60">to</p>
-              <p className="font-marker text-lg leading-tight">{ride.destination}</p>
+              <p className="font-marker text-lg leading-tight">{ride.destinationLabel ?? "Destination"}</p>
             </div>
           </div>
           <div className="text-right shrink-0">
-            <p className="font-marker text-3xl">₹{ride.fare}</p>
-            <p className="font-hand text-sm text-ink/60">{ride.distance}</p>
+            <p className="font-marker text-3xl">₹{typeof ride.fare === "number" ? ride.fare : "--"}</p>
+            <p className="font-hand text-sm text-ink/60">{ride.distanceLabel ?? "--"}</p>
           </div>
         </div>
 
         {/* Meta chips */}
         <div className="flex flex-wrap gap-2 mt-4">
           <span className="flex items-center gap-1 px-3 py-1 rounded-full border-[2px] border-ink bg-cream font-hand text-sm capitalize" style={{ boxShadow: "2px 2px 0 #1B1B1F" }}>
-            {ride.rideType}
+            {ride.rideType ?? "ride"}
           </span>
           <span className="flex items-center gap-1 px-3 py-1 rounded-full border-[2px] border-ink bg-cream font-hand text-sm" style={{ boxShadow: "2px 2px 0 #1B1B1F" }}>
-            <Clock size={12} /> {ride.duration}
+            <Clock size={12} /> {ride.durationLabel ?? "--"}
           </span>
           <span className="flex items-center gap-1 px-3 py-1 rounded-full border-[2px] border-ink bg-cream font-hand text-sm" style={{ boxShadow: "2px 2px 0 #1B1B1F" }}>
-            <MapPin size={12} /> {ride.distance}
+            <MapPin size={12} /> {ride.distanceLabel ?? "--"}
           </span>
         </div>
 
@@ -127,18 +151,18 @@ function RideCard({ ride, index }: { ride: MockRide; index: number }) {
             >
               <div
                 className="mt-4 flex items-center gap-4 p-4 rounded-[18px_6px_18px_8px/8px_18px_6px_18px] border-[2px] border-ink"
-                style={{ background: ride.driver.color + "33", boxShadow: "3px 3px 0 #1B1B1F" }}
+                style={{ background: driverColor + "33", boxShadow: "3px 3px 0 #1B1B1F" }}
                 data-testid={`driver-detail-${ride.id}`}
               >
                 <span
                   className="w-12 h-12 grid place-items-center rounded-full border-[2.5px] border-ink font-marker text-xl shrink-0"
-                  style={{ background: ride.driver.color, boxShadow: "2px 2px 0 #1B1B1F" }}
+                  style={{ background: driverColor, boxShadow: "2px 2px 0 #1B1B1F" }}
                 >
-                  {ride.driver.name[0]}
+                  {ride.driver.name?.[0] ?? "?"}
                 </span>
                 <div className="flex-1">
                   <p className="font-marker text-lg flex items-center gap-2">
-                    {ride.driver.name}
+                    {ride.driver.name ?? "Driver"}
                     {ride.driver.trusted && (
                       <span className="text-xs font-hand bg-leaf/30 border border-leaf px-2 py-0.5 rounded-full text-ink">
                         ✓ trusted
@@ -146,23 +170,23 @@ function RideCard({ ride, index }: { ride: MockRide; index: number }) {
                     )}
                   </p>
                   <p className="font-hand text-base text-ink/70">
-                    {ride.driver.vehicle} • {ride.driver.plate}
+                    {ride.driver.vehicle ?? "Vehicle"} • {ride.driver.plate ?? "--"}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="font-marker text-lg flex items-center gap-1">
                     <Star size={14} className="fill-current text-sun" />
-                    {ride.driver.rating}
+                    {ride.driver.rating ?? "--"}
                   </p>
                 </div>
               </div>
 
               {/* Ride mini-replay animation for completed */}
-              {ride.status === "completed" && (
+              {status === "completed" && (
                 <div className="mt-3 relative h-8 rounded-full overflow-hidden bg-cream border-[2px] border-ink/20">
                   <motion.div
                     className="absolute left-0 top-0 h-full rounded-full"
-                    style={{ background: ride.driver.color }}
+                    style={{ background: driverColor }}
                     initial={{ width: 0 }}
                     animate={{ width: "100%" }}
                     transition={{ duration: 2, ease: "easeInOut" }}
@@ -180,17 +204,47 @@ function RideCard({ ride, index }: { ride: MockRide; index: number }) {
   );
 }
 
-const TABS = ["all", "active", "scheduled", "completed"] as const;
-type Tab = typeof TABS[number];
-
 export default function ActivityPage() {
-  const [tab, setTab] = useState<Tab>("all");
+  const { data, isLoading } = useStudent();
+  const rides = data?.rides ?? [];
+  const [tab, setTab] = useState<TabKey>("all");
+
+  const ridesWithStatus = useMemo(
+    () => rides.map((ride) => ({ ride, status: resolveStatus(ride) })),
+    [rides]
+  );
+
+  const statusCounts = useMemo(() => {
+    const counts: Record<StatusKey, number> = {
+      requested: 0,
+      active: 0,
+      scheduled: 0,
+      completed: 0,
+      cancelled: 0,
+    };
+    ridesWithStatus.forEach(({ status }) => {
+      counts[status] += 1;
+    });
+    return counts;
+  }, [ridesWithStatus]);
 
   const filtered = tab === "all"
-    ? mockRides
-    : mockRides.filter((r) => r.status === tab);
+    ? ridesWithStatus
+    : ridesWithStatus.filter((r) => r.status === tab);
 
-  const activeRide = mockRides.find((r) => r.status === "active");
+  const activeRide = ridesWithStatus.find((r) => r.status === "active")?.ride ?? null;
+
+  const totalSpent = useMemo(() => {
+    return ridesWithStatus
+      .filter(({ status }) => status === "completed")
+      .reduce((sum, { ride }) => sum + (ride.fare ?? 0), 0);
+  }, [ridesWithStatus]);
+
+  const kmCovered = useMemo(() => {
+    return ridesWithStatus
+      .filter(({ status }) => status === "completed")
+      .reduce((sum, { ride }) => sum + parseDistanceKm(ride.distanceLabel), 0);
+  }, [ridesWithStatus]);
 
   return (
     <div className="space-y-8" data-testid="page-activity">
@@ -202,7 +256,7 @@ export default function ActivityPage() {
           </h1>
         </div>
         <p className="font-hand text-lg text-ink/70">
-          <span className="font-marker text-tomato">{mockRides.length}</span> rides total
+          <span className="font-marker text-tomato">{isLoading ? "…" : rides.length}</span> rides total
         </p>
       </header>
 
@@ -226,7 +280,7 @@ export default function ActivityPage() {
             <p className="font-marker text-xl">
               You&apos;re on a ride right now!{" "}
               <span className="font-hand text-lg text-ink/70">
-                {activeRide.pickup} → {activeRide.destination}
+                {activeRide.pickupLabel ?? "Pickup"} → {activeRide.destinationLabel ?? "Destination"}
               </span>
             </p>
             <Link
@@ -269,7 +323,7 @@ export default function ActivityPage() {
           >
             {t}
             <span className="ml-2 font-marker text-base">
-              {t === "all" ? mockRides.length : mockRides.filter((r) => r.status === t).length}
+              {t === "all" ? rides.length : statusCounts[t] ?? 0}
             </span>
           </button>
         ))}
@@ -278,9 +332,9 @@ export default function ActivityPage() {
       {/* Summary mini-stats */}
       <div className="grid sm:grid-cols-3 gap-4">
         {[
-          { label: "Total spent", value: `₹${mockRides.filter(r => r.status === "completed").reduce((s, r) => s + r.fare, 0)}`, color: "#FFD23F", doodle: <CoinDoodle /> },
-          { label: "Rides done", value: mockRides.filter(r => r.status === "completed").length, color: "#7BC950", doodle: <StarDoodle color="#7BC950" /> },
-          { label: "Km covered", value: "43.1 km", color: "#5BC0EB", doodle: <SquiggleDoodle color="#5BC0EB" /> },
+          { label: "Total spent", value: `₹${Math.round(totalSpent)}`, color: "#FFD23F", doodle: <CoinDoodle /> },
+          { label: "Rides done", value: statusCounts.completed, color: "#7BC950", doodle: <StarDoodle color="#7BC950" /> },
+          { label: "Km covered", value: `${kmCovered.toFixed(1)} km`, color: "#5BC0EB", doodle: <SquiggleDoodle color="#5BC0EB" /> },
         ].map((s, i) => (
           <motion.div
             key={s.label}
@@ -320,7 +374,7 @@ export default function ActivityPage() {
             </motion.div>
           ) : (
             <motion.div key={tab} className="space-y-5" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              {filtered.map((ride, i) => (
+              {filtered.map(({ ride }, i) => (
                 <RideCard key={ride.id} ride={ride} index={i} />
               ))}
             </motion.div>

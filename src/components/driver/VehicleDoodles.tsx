@@ -427,3 +427,105 @@ export function RCDoodle(props: JSX.IntrinsicElements["svg"]) {
     </svg>
   );
 }
+
+/* ──────────────────────────────────────────────────────────── */
+/* Payout illustrations                                        */
+/* ──────────────────────────────────────────────────────────── */
+
+export function BankDoodle(props: JSX.IntrinsicElements["svg"]) {
+  return (
+    <svg viewBox="0 0 200 140" fill="none" {...props}>
+      <path
+        d="M20,54 L 100,16 L 180,54 Z"
+        fill="#FFD23F"
+        stroke="#1B1B1F"
+        strokeWidth="3.5"
+        strokeLinejoin="round"
+      />
+      <rect
+        x="26"
+        y="54"
+        width="148"
+        height="72"
+        rx="10"
+        fill="#FFB4A2"
+        stroke="#1B1B1F"
+        strokeWidth="3.5"
+      />
+      <rect x="42" y="66" width="18" height="52" fill="#FDF6E3" stroke="#1B1B1F" strokeWidth="2.5" />
+      <rect x="72" y="66" width="18" height="52" fill="#FDF6E3" stroke="#1B1B1F" strokeWidth="2.5" />
+      <rect x="110" y="66" width="18" height="52" fill="#FDF6E3" stroke="#1B1B1F" strokeWidth="2.5" />
+      <rect x="140" y="66" width="18" height="52" fill="#FDF6E3" stroke="#1B1B1F" strokeWidth="2.5" />
+      <rect x="88" y="86" width="24" height="40" fill="#FDF6E3" stroke="#1B1B1F" strokeWidth="2.5" />
+      <path d="M26,54 L 174,54" stroke="#1B1B1F" strokeWidth="3" />
+      <circle cx="166" cy="34" r="10" fill="#7BC950" stroke="#1B1B1F" strokeWidth="2.5" />
+      <path d="M166,28 L 166,40" stroke="#1B1B1F" strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M24,30 L 32,22 M28,20 L 28,34"
+        className="sparkle-blink sparkle-blink--1"
+        stroke="#FF5A36"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <text
+        x="100"
+        y="80"
+        textAnchor="middle"
+        fontFamily="var(--font-marker), cursive"
+        fontSize="12"
+        fill="#1B1B1F"
+      >
+        BANK
+      </text>
+    </svg>
+  );
+}
+
+export function UpiDoodle(props: JSX.IntrinsicElements["svg"]) {
+  return (
+    <svg viewBox="0 0 200 140" fill="none" {...props}>
+      <rect
+        x="38"
+        y="12"
+        width="124"
+        height="116"
+        rx="18"
+        fill="#5BC0EB"
+        stroke="#1B1B1F"
+        strokeWidth="3.5"
+      />
+      <rect
+        x="54"
+        y="28"
+        width="92"
+        height="76"
+        rx="10"
+        fill="#FDF6E3"
+        stroke="#1B1B1F"
+        strokeWidth="3"
+      />
+      <rect x="64" y="38" width="16" height="16" fill="#1B1B1F" />
+      <rect x="120" y="38" width="16" height="16" fill="#1B1B1F" />
+      <rect x="64" y="72" width="16" height="16" fill="#1B1B1F" />
+      <rect x="94" y="54" width="14" height="14" fill="#1B1B1F" />
+      <rect x="114" y="72" width="12" height="12" fill="#1B1B1F" className="sparkle-blink sparkle-blink--2" />
+      <circle cx="100" cy="116" r="6" fill="#1B1B1F" />
+      <path
+        d="M142,86 L 160,74 M160,74 L 152,72"
+        stroke="#FF5A36"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <text
+        x="100"
+        y="126"
+        textAnchor="middle"
+        fontFamily="var(--font-marker), cursive"
+        fontSize="11"
+        fill="#1B1B1F"
+      >
+        UPI
+      </text>
+    </svg>
+  );
+}

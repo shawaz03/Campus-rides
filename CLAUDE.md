@@ -17,6 +17,7 @@ Campus Rides is a doodle-styled ride booking web app centered on student life. I
   - Applies grain background and cream/ink palette
 - /api/geocode (Nominatim search)
 - /api/student (Supabase-backed student data)
+  - Activity and wallet pull rides + ride_payments from here
 
 ### Layouts
 - Root layout: src/app/layout.tsx
@@ -26,7 +27,7 @@ Campus Rides is a doodle-styled ride booking web app centered on student life. I
 5. /driver collects vehicle details and document uploads, then shows a confirmation modal.
 6. /student home loads student data via /api/student (React Query).
 7. /student/book uses local state + geocode search + map to simulate booking.
-8. /student/activity, /student/wallet, /student/profile use mock data or Supabase data where available.
+8. /student/activity and /student/wallet now load live rides and payments from /api/student; profile may still use mock data where needed.
 - Student layout: src/app/student/layout.tsx
   - Wraps pages with React Query Providers
   - Renders StudentSidebar and PageTransition
@@ -48,6 +49,8 @@ update this route to match the new schema.
 
 - Driver onboarding: src/app/driver/page.tsx
   - Vehicle selection, vehicle details, document upload UI, submit confirmation modal
+- Driver dashboard: src/app/driver/dashboard/page.tsx
+  - Filters new requests by driver vehicle_type
 - Driver doodles: src/components/driver/VehicleDoodles.tsx
   - Vehicle, document, and background doodle SVGs
 
@@ -70,7 +73,7 @@ Supabase clients:
 - React Query: src/components/providers.tsx sets QueryClient
 - useStudent hook: src/hooks/use-student.ts calls /api/student
 - StudentSidebar, StudentHome, and Profile use useStudent
-- Activity and Wallet pages currently use mock data in src/lib/mockData.ts
+- Activity and Wallet pages now use useStudent rides + transactions (no mock data)
 
 ## State management
 - Zustand store: src/lib/bookingStore.ts

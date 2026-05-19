@@ -1,10 +1,10 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, TrendingDown, TrendingUp, CreditCard, Smartphone } from "lucide-react";
-import { mockStudent, mockTransactions } from "@/lib/mockData";
 import { CoinDoodle, SquiggleDoodle, StarDoodle, ArrowDoodle } from "@/components/doodles";
+import { useStudent } from "@/hooks/use-student";
 
 const METHODS = [
   { id: "upi", label: "UPI", sub: "riya@upi", icon: Smartphone, color: "#7BC950" },
@@ -13,13 +13,41 @@ const METHODS = [
 
 export default function WalletPage() {
   const [topupOpen, setTopupOpen] = useState(false);
-  const balance = mockStudent.walletBalance;
-  const monthSpend = mockTransactions
+  const { data } = useStudent();
+  const rides = data?.rides ?? [];
+  const transactions = data?.transactions ?? [];
+  const balance = data?.profile?.coinsBalance ?? 0;
+
+  const rideLabelMap = useMemo(() => {
+    const map = new Map<string, string>();
+    rides.forEach((ride) => {
+      if (!ride.id) return;
+      const from = ride.pickupLabel ?? "Pickup";
+      const to = ride.destinationLabel ?? "Destination";
+      map.set(ride.id, `${from} → ${to}`);
+    });
+    return map;
+  }, [rides]);
+
+  const enrichedTransactions = useMemo(() => {
+    return transactions.map((txn) => {
+      const rawAmount = txn.amount ?? 0;
+      const normalizedAmount = txn.type === "ride" ? -Math.abs(rawAmount) : rawAmount;
+      const kind = txn.type === "topup" ? "topup" : txn.type === "refund" ? "refund" : "ride";
+      const label = rideLabelMap.get(txn.rideId ?? "") ?? (kind === "ride" ? "Ride payment" : "Wallet update");
+      const date = txn.createdAt
+        ? new Date(txn.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+        : "recent";
+      return { ...txn, amount: normalizedAmount, kind, label, date };
+    });
+  }, [transactions, rideLabelMap]);
+
+  const monthSpend = enrichedTransactions
     .filter((t) => t.amount < 0)
-    .reduce((s, t) => s + Math.abs(t.amount), 0);
-  const monthIn = mockTransactions
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const monthIn = enrichedTransactions
     .filter((t) => t.amount > 0)
-    .reduce((s, t) => s + t.amount, 0);
+    .reduce((sum, t) => sum + t.amount, 0);
 
   return (
     <div className="space-y-8" data-testid="page-wallet">
@@ -148,38 +176,47 @@ export default function WalletPage() {
           className="border-[2.5px] border-ink rounded-[24px_8px_22px_10px/10px_22px_8px_24px] bg-white overflow-hidden"
           style={{ boxShadow: "5px 5px 0 #1B1B1F" }}
         >
-          {mockTransactions.map((t, i) => (
-            <motion.div
-              key={t.id}
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.04 }}
-              className={`flex items-center gap-4 p-4 ${i !== 0 ? "border-t-[2px] border-dashed border-ink/30" : ""}`}
-              data-testid={`txn-${t.id}`}
-            >
-              <span
-                className="w-11 h-11 grid place-items-center rounded-full border-[2.5px] border-ink font-marker text-base"
-                style={{
-                  background:
-                    t.kind === "topup" ? "#7BC950" : t.kind === "refund" ? "#5BC0EB" : "#FFD23F",
-                  boxShadow: "2px 2px 0 #1B1B1F",
-                }}
-              >
-                {t.kind === "topup" ? "↑" : t.kind === "refund" ? "↺" : "🚗"}
-              </span>
-              <div className="flex-1">
-                <p className="font-marker text-lg">{t.label}</p>
-                <p className="font-hand text-base text-ink/60">{t.date}</p>
-              </div>
-              <p
-                className={`font-marker text-xl ${
-                  t.amount < 0 ? "text-ink" : "text-leaf"
-                }`}
-              >
-                {t.amount < 0 ? "−" : "+"}₹{Math.abs(t.amount)}
+          {enrichedTransactions.length === 0 ? (
+            <div className="p-6 text-center">
+              <p className="font-marker text-2xl">no payments yet ✿</p>
+              <p className="font-hand text-base text-ink/60 mt-2">
+                Book a ride to see charges here.
               </p>
-            </motion.div>
-          ))}
+            </div>
+          ) : (
+            enrichedTransactions.map((t, i) => (
+              <motion.div
+                key={t.id}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.04 }}
+                className={`flex items-center gap-4 p-4 ${i !== 0 ? "border-t-[2px] border-dashed border-ink/30" : ""}`}
+                data-testid={`txn-${t.id}`}
+              >
+                <span
+                  className="w-11 h-11 grid place-items-center rounded-full border-[2.5px] border-ink font-marker text-base"
+                  style={{
+                    background:
+                      t.kind === "topup" ? "#7BC950" : t.kind === "refund" ? "#5BC0EB" : "#FFD23F",
+                    boxShadow: "2px 2px 0 #1B1B1F",
+                  }}
+                >
+                  {t.kind === "topup" ? "↑" : t.kind === "refund" ? "↺" : "🚗"}
+                </span>
+                <div className="flex-1">
+                  <p className="font-marker text-lg">{t.label}</p>
+                  <p className="font-hand text-base text-ink/60">{t.date}</p>
+                </div>
+                <p
+                  className={`font-marker text-xl ${
+                    t.amount < 0 ? "text-ink" : "text-leaf"
+                  }`}
+                >
+                  {t.amount < 0 ? "−" : "+"}₹{Math.abs(t.amount)}
+                </p>
+              </motion.div>
+            ))
+          )}
         </div>
       </section>
 

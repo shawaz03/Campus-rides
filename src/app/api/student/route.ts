@@ -149,19 +149,20 @@ export async function GET() {
     : [];
 
   const transactionsRes = await supabase
-    .from("wallet_transactions")
-    .select("id, amount, type, ride_id, created_at")
-    .eq("user_id", user.id)
+    .from("ride_payments")
+    .select("id, amount, ride_id, created_at, payment_method, payment_status, rides!inner (student_id)")
+    .eq("rides.student_id", user.id)
     .order("created_at", { ascending: false })
     .limit(25);
 
   const transactions: StudentTransaction[] = Array.isArray(transactionsRes.data)
     ? transactionsRes.data.map((txn) => {
         const row = txn as Record<string, unknown>;
+        const amountValue = toNumber(row.amount);
         return {
           id: String(row.id ?? ""),
-          amount: toNumber(row.amount),
-          type: typeof row.type === "string" ? row.type : null,
+          amount: amountValue === null ? null : -Math.abs(amountValue),
+          type: "ride",
           rideId: typeof row.ride_id === "string" ? row.ride_id : null,
           createdAt: typeof row.created_at === "string" ? row.created_at : null,
         };
