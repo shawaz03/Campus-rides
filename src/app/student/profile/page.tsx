@@ -181,6 +181,39 @@ export default function ProfilePage() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  // Load preferences from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("campus-rides-prefs");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            setPrefs((prev) =>
+              prev.map((def) => {
+                const found = parsed.find((p) => p.id === def.id);
+                return found ? { ...def, on: Boolean(found.on) } : def;
+              })
+            );
+          }
+        } catch (e) {
+          console.warn("Failed to parse stored preferences:", e);
+        }
+      }
+    }
+  }, []);
+
+  const handlePrefToggle = (id: string) => {
+    setPrefs((prev) => {
+      const updated = prev.map((x) => (x.id === id ? { ...x, on: !x.on } : x));
+      if (typeof window !== "undefined") {
+        localStorage.setItem("campus-rides-prefs", JSON.stringify(updated));
+        window.dispatchEvent(new Event("prefs-changed"));
+      }
+      return updated;
+    });
+  };
+
   // SOS Emergency States
   const sirenRef = useRef<EmergencySiren | null>(null);
   const [showSOSModal, setShowSOSModal] = useState(false);
@@ -554,11 +587,7 @@ export default function ProfilePage() {
               <p className="flex-1 font-hand text-lg">{p.label}</p>
               <Toggle
                 on={p.on}
-                onChange={() =>
-                  setPrefs((arr) =>
-                    arr.map((x) => (x.id === p.id ? { ...x, on: !x.on } : x))
-                  )
-                }
+                onChange={() => handlePrefToggle(p.id)}
                 testId={`pref-toggle-${p.id}`}
               />
             </div>
