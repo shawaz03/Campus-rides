@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MapPin,
@@ -220,6 +221,7 @@ const FEATURES = [
 ];
 
 export default function BookRidePage() {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const {
     pickup,
@@ -302,6 +304,9 @@ export default function BookRidePage() {
     }
 
     setBooking("booked");
+    setTimeout(() => {
+      router.push("/student/activity");
+    }, 1500);
   };
 
   return (

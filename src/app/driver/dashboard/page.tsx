@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Cloud, Star, Sun } from "@/components/driver/VehicleDoodles";
 import {
@@ -140,6 +141,7 @@ function DashboardLoading() {
 
 export default function DriverDashboardPage() {
   const supabase = useMemo(() => createClient(), []);
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [driverName, setDriverName] = useState<string>("driver");
   const [requests, setRequests] = useState<DriverRide[]>([]);
@@ -176,9 +178,27 @@ export default function DriverDashboardPage() {
 
     const driverRes = await supabase
       .from("drivers")
-      .select("vehicle_type")
-      .eq("id", user.id)
+      .select("vehicle_type, status, is_approved")
+      .eq("user_id", user.id)
       .maybeSingle();
+
+    if (driverRes.error) {
+      setError("Unable to load driver data. Please try again.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!driverRes.data) {
+      router.push("/driver/onboarding");
+      return;
+    }
+
+    const isApproved = driverRes.data.status === "approved" || driverRes.data.is_approved;
+    if (!isApproved) {
+      router.push("/driver/review");
+      return;
+    }
+
     const vehicleType =
       typeof driverRes.data?.vehicle_type === "string" ? driverRes.data.vehicle_type : null;
     setDriverVehicleType(vehicleType);
@@ -186,13 +206,13 @@ export default function DriverDashboardPage() {
     let requestsQuery = supabase
       .from("rides")
       .select(
-        "id, status, fare, vehicle_type, ride_type, pickup_label, pickup_name, pickup, destination_label, destination_name, destination, dest_label, dest_name, distance_km, distance, duration_min, duration, scheduled_at, created_at, student_id, driver_id"
+        "id, status, fare, vehicle_type, ride_type, pickup_label, destination_label, distance_km, duration_min, scheduled_at, created_at, student_id, driver_id"
       )
       .eq("status", "requested")
       .is("driver_id", null);
 
     if (vehicleType) {
-      requestsQuery = requestsQuery.eq("ride_type", vehicleType);
+      requestsQuery = requestsQuery.or(`ride_type.eq.${vehicleType},vehicle_type.eq.${vehicleType}`);
     }
 
     const requestsRes = await requestsQuery
@@ -202,7 +222,7 @@ export default function DriverDashboardPage() {
     const historyRes = await supabase
       .from("rides")
       .select(
-        "id, status, fare, vehicle_type, ride_type, pickup_label, pickup_name, pickup, destination_label, destination_name, destination, dest_label, dest_name, distance_km, distance, duration_min, duration, completed_at, created_at, student_id, driver_id"
+        "id, status, fare, vehicle_type, ride_type, pickup_label, destination_label, distance_km, duration_min, completed_at, created_at, student_id, driver_id"
       )
       .eq("driver_id", user.id)
       .order("created_at", { ascending: false })
@@ -224,7 +244,7 @@ export default function DriverDashboardPage() {
       await loadDashboard();
     };
     run();
-    const interval = setInterval(run, 12000);
+    const interval = setInterval(run, 3000);
     return () => {
       mounted = false;
       clearInterval(interval);

@@ -14,5 +14,6 @@ export function useStudent() {
   return useQuery({
     queryKey: ["student-data"],
     queryFn: fetchStudent,
+    refetchInterval: 3000,
   });
 }

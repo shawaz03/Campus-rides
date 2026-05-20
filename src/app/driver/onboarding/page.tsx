@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState, type ChangeEvent, type CSSProperties } from "react";
+import { useMemo, useState, useEffect, type ChangeEvent, type CSSProperties } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 import {
   AadhaarDoodle,
   AutoDoodle,
@@ -106,7 +108,7 @@ const STEP_COPY: Record<
   },
 };
 
-const vehicleCardVariants = {
+const vehicleCardVariants: any = {
   initial: (index: number) => ({
     opacity: 0,
     y: 12,
@@ -145,11 +147,11 @@ function VehicleCard({ vehicle, selected, index, onSelect }: VehicleCardProps) {
   const [boosted, setBoosted] = useState(false);
   const baseShadow = selected ? "8px 8px 0 #1B1B1F" : "5px 5px 0 #1B1B1F";
   const hoverShadow = selected ? "12px 12px 0 #1B1B1F" : "9px 9px 0 #1B1B1F";
-  const cardStyle: CSSProperties = {
+  const cardStyle = {
     background: selected ? vehicle.color : "#fffdf5",
     "--card-shadow": baseShadow,
     "--card-shadow-hover": hoverShadow,
-  };
+  } as React.CSSProperties;
 
   return (
     <motion.button
@@ -192,6 +194,16 @@ function VehicleCard({ vehicle, selected, index, onSelect }: VehicleCardProps) {
 }
 
 export default function DriverOnboardingPage() {
+  const router = useRouter();
+  const supabase = useMemo(() => createClient(), []);
+
+  const [userId, setUserId] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+  const [phone, setPhone] = useState<string | null>(null);
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const [step, setStep] = useState<Step>("vehicle");
   const [vehicleType, setVehicleType] = useState<VehicleType | null>(null);
   const [vehicleNumber, setVehicleNumber] = useState("");
@@ -202,6 +214,8 @@ export default function DriverOnboardingPage() {
     license: null,
     rc: null,
   });
+  const [uploadedDocs, setUploadedDocs] = useState<Record<string, boolean>>({});
+
   const [accountHolderName, setAccountHolderName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [ifscCode, setIfscCode] = useState("");
@@ -210,12 +224,106 @@ export default function DriverOnboardingPage() {
   const [payoutSubmitted, setPayoutSubmitted] = useState(false);
   const [payoutModalOpen, setPayoutModalOpen] = useState(false);
 
+  // Load existing profile & documents
+  useEffect(() => {
+    async function loadDriverProfile() {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        const user = authData?.user;
+        if (!user) {
+          setIsLoadingUser(false);
+          return;
+        }
+
+        setUserId(user.id);
+        setEmail(user.email ?? null);
+        setPhone(user.phone ?? null);
+
+        // Fetch driver profile
+        const { data: driverProfile } = await supabase
+          .from("drivers")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (driverProfile) {
+          if (driverProfile.vehicle_type) {
+            setVehicleType(driverProfile.vehicle_type as VehicleType);
+          }
+
+          // Fetch vehicle info
+          const { data: vehicle } = await supabase
+            .from("driver_vehicles")
+            .select("*")
+            .eq("driver_id", user.id)
+            .maybeSingle();
+
+          if (vehicle) {
+            setVehicleModel(vehicle.vehicle_model ?? "");
+            setVehicleNumber(vehicle.vehicle_number ?? "");
+          }
+
+          // Fetch documents metadata
+          const { data: docsData } = await supabase
+            .from("driver_documents")
+            .select("*")
+            .eq("driver_id", user.id);
+
+          const loadedUploaded: Record<string, boolean> = {};
+          if (docsData && docsData.length > 0) {
+            docsData.forEach((d) => {
+              loadedUploaded[d.doc_type] = true;
+            });
+          }
+
+          // Fetch bank details & QR code if they exist in storage directly
+          try {
+            const { data: storageFiles } = await supabase.storage
+              .from("driver-documents")
+              .list(user.id);
+
+            const hasPayout = storageFiles?.some((f) => f.name === "payout_details.png");
+            const upiQrFile = storageFiles?.find((f) => f.name.startsWith("upi_qr"));
+
+            loadedUploaded.payout_details = Boolean(hasPayout);
+            loadedUploaded.upi_qr = Boolean(upiQrFile);
+            setUploadedDocs(loadedUploaded);
+
+            if (hasPayout) {
+              const { data: fileData } = await supabase.storage
+                .from("driver-documents")
+                .download(`${user.id}/payout_details.png`);
+
+              if (fileData) {
+                const text = await fileData.text();
+                const json = JSON.parse(text);
+                setAccountHolderName(json.accountHolderName ?? "");
+                setAccountNumber(json.accountNumber ?? "");
+                setIfscCode(json.ifscCode ?? "");
+                setUpiId(json.upiId ?? "");
+              }
+            }
+          } catch (storageErr) {
+            console.error("Error loading storage documents", storageErr);
+            setUploadedDocs(loadedUploaded);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading driver profile data", err);
+      } finally {
+        setIsLoadingUser(false);
+      }
+    }
+
+    loadDriverProfile();
+  }, [supabase]);
+
   const canContinue =
     vehicleType !== null && vehicleNumber.trim().length > 0 && vehicleModel.trim().length > 0;
 
   const allDocsReady = useMemo(
-    () => DOCS.every((doc) => Boolean(docs[doc.id])),
-    [docs]
+    () => DOCS.every((doc) => Boolean(docs[doc.id]) || uploadedDocs[doc.id]),
+    [docs, uploadedDocs]
   );
 
   const payoutReady = useMemo(
@@ -224,8 +332,8 @@ export default function DriverOnboardingPage() {
       accountNumber.trim().length > 0 &&
       ifscCode.trim().length > 0 &&
       upiId.trim().length > 0 &&
-      Boolean(upiQr),
-    [accountHolderName, accountNumber, ifscCode, upiId, upiQr]
+      (Boolean(upiQr) || uploadedDocs.upi_qr),
+    [accountHolderName, accountNumber, ifscCode, upiId, upiQr, uploadedDocs.upi_qr]
   );
 
   const handleFileChange = (key: DocKey) => (event: ChangeEvent<HTMLInputElement>) => {
@@ -240,18 +348,211 @@ export default function DriverOnboardingPage() {
     setPayoutModalOpen(false);
   };
 
-  const handleDocSubmit = () => {
-    if (!allDocsReady) return;
-    setDocsSubmitted(true);
+  const handleDocSubmit = async () => {
+    if (!allDocsReady || !userId) return;
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      // 0. Ensure driver profile exists in drivers table
+      const { data: driverProfile } = await supabase
+        .from("drivers")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!driverProfile) {
+        await supabase.from("drivers").insert({
+          user_id: userId,
+          email: email,
+          phone: phone,
+          vehicle_type: vehicleType,
+          status: "pending",
+          is_approved: false,
+          is_available: false,
+          rating: 5.0,
+        });
+      } else {
+        await supabase.from("drivers").update({
+          vehicle_type: vehicleType,
+        }).eq("user_id", userId);
+      }
+
+      // 1. Upsert vehicle info
+      const { data: vehicleData } = await supabase
+        .from("driver_vehicles")
+        .select("id")
+        .eq("driver_id", userId)
+        .maybeSingle();
+
+      if (!vehicleData) {
+        await supabase.from("driver_vehicles").insert({
+          driver_id: userId,
+          vehicle_type: vehicleType,
+          vehicle_model: vehicleModel,
+          vehicle_number: vehicleNumber,
+        });
+      } else {
+        await supabase.from("driver_vehicles").update({
+          vehicle_type: vehicleType,
+          vehicle_model: vehicleModel,
+          vehicle_number: vehicleNumber,
+        }).eq("driver_id", userId);
+      }
+
+      // 2. Upload and save files
+      for (const docKey of ["aadhaar", "license", "rc"] as const) {
+        const file = docs[docKey];
+        if (file) {
+          const fileExt = file.name.split(".").pop();
+          const fileName = `${userId}/${docKey}-${Date.now()}.${fileExt}`;
+
+          // Upload to storage bucket
+          const { error: uploadErr } = await supabase.storage
+            .from("driver-documents")
+            .upload(fileName, file, { upsert: true });
+
+          if (uploadErr) throw uploadErr;
+
+          // Delete old doc record
+          await supabase.from("driver_documents").delete().eq("driver_id", userId).eq("doc_type", docKey);
+
+          // Insert new doc record
+          const { error: dbErr } = await supabase.from("driver_documents").insert({
+            driver_id: userId,
+            doc_type: docKey,
+            file_path: fileName,
+            status: "pending",
+          });
+
+          if (dbErr) throw dbErr;
+        }
+      }
+
+      // Update local state to reflect upload
+      const newUploaded = { ...uploadedDocs };
+      if (docs.aadhaar) newUploaded.aadhaar = true;
+      if (docs.license) newUploaded.license = true;
+      if (docs.rc) newUploaded.rc = true;
+      setUploadedDocs(newUploaded);
+
+      setDocsSubmitted(true);
+    } catch (err: any) {
+      console.error(err);
+      setSubmitError(err.message || "Failed to submit documents. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handlePayoutSubmit = () => {
-    if (!payoutReady) return;
-    setPayoutSubmitted(true);
-    setPayoutModalOpen(true);
+  const handlePayoutSubmit = async () => {
+    if (!payoutReady || !userId) return;
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      // 1. Upload UPI QR if new file is selected
+      if (upiQr) {
+        // Clean up old QR files in storage
+        try {
+          const { data: filesList } = await supabase.storage
+            .from("driver-documents")
+            .list(userId);
+
+          const oldUpiQrs = filesList?.filter(f => f.name.startsWith("upi_qr")) || [];
+          if (oldUpiQrs.length > 0) {
+            await supabase.storage
+              .from("driver-documents")
+              .remove(oldUpiQrs.map(f => `${userId}/${f.name}`));
+          }
+        } catch (cleanErr) {
+          console.error("Failed to clean up old QR code", cleanErr);
+        }
+
+        const qrExt = upiQr.name.split(".").pop();
+        const qrFileName = `${userId}/upi_qr-${Date.now()}.${qrExt}`;
+
+        const { error: uploadErr } = await supabase.storage
+          .from("driver-documents")
+          .upload(qrFileName, upiQr, { upsert: true });
+
+        if (uploadErr) throw uploadErr;
+      }
+
+      // 2. Upload Payout Details JSON (Spoofed as image/png to bypass storage MIME constraints)
+      const payoutDetails = {
+        accountHolderName,
+        accountNumber,
+        ifscCode,
+        upiId,
+      };
+      const payoutBlob = new Blob([JSON.stringify(payoutDetails)], { type: "image/png" });
+      const payoutFile = new File([payoutBlob], "payout_details.png", { type: "image/png" });
+      const payoutFileName = `${userId}/payout_details.png`;
+
+      const { error: payoutUploadErr } = await supabase.storage
+        .from("driver-documents")
+        .upload(payoutFileName, payoutFile, { upsert: true });
+
+      if (payoutUploadErr) throw payoutUploadErr;
+
+      // 3. Update driver status in drivers table
+      const { data: driverProfile } = await supabase
+        .from("drivers")
+        .select("user_id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!driverProfile) {
+        await supabase.from("drivers").insert({
+          user_id: userId,
+          email: email,
+          phone: phone,
+          vehicle_type: vehicleType,
+          status: "pending",
+          is_approved: false,
+          is_available: false,
+          rating: 5.0,
+        });
+      } else {
+        await supabase.from("drivers").update({
+          vehicle_type: vehicleType,
+          status: "pending",
+          is_approved: false,
+        }).eq("user_id", userId);
+      }
+
+      // Update local state
+      const newUploaded = { ...uploadedDocs };
+      if (upiQr) newUploaded.upi_qr = true;
+      newUploaded.payout_details = true;
+      setUploadedDocs(newUploaded);
+
+      setPayoutSubmitted(true);
+      setPayoutModalOpen(true);
+    } catch (err: any) {
+      console.error(err);
+      setSubmitError(err.message || "Failed to submit payout details. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const stepCopy = STEP_COPY[step];
+
+  if (isLoadingUser) {
+    return (
+      <div className="min-h-[70vh] grid place-items-center bg-cream relative overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-12 float-a"><Star color="#FFD23F" /></div>
+        <div className="absolute top-1/3 right-1/4 w-16 float-b"><Cloud /></div>
+        <div className="absolute bottom-1/4 left-1/3 w-10 float-c"><Star color="#FF5A36" /></div>
+        <div className="text-center space-y-4">
+          <p className="font-scribble text-3xl text-tomato animate-pulse">~ loading your onboarding progress ~</p>
+          <div className="w-12 h-12 border-4 border-tomato border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative overflow-hidden">
@@ -439,7 +740,11 @@ export default function DriverOnboardingPage() {
                             {file ? "Replace file" : "Upload file"}
                           </label>
                           <p className="mt-2 font-hand text-sm text-ink/70">
-                            {file ? `Selected: ${file.name}` : "No file selected"}
+                            {file
+                              ? `Selected: ${file.name}`
+                              : uploadedDocs[doc.id]
+                              ? "✓ Previously uploaded (pending review)"
+                              : "No file selected"}
                           </p>
                         </div>
                       </motion.div>
@@ -448,23 +753,30 @@ export default function DriverOnboardingPage() {
                 </div>
               </section>
 
+              {submitError && (
+                <div className="p-3 border-[2.5px] border-tomato bg-tomato/5 rounded-2xl text-tomato font-hand text-base">
+                  {submitError}
+                </div>
+              )}
+
               <section className="flex flex-wrap gap-4 items-center">
                 <button
                   type="button"
                   onClick={() => setStep("vehicle")}
                   className="sketch-btn"
                   data-testid="driver-back"
+                  disabled={isSubmitting}
                 >
                   Back
                 </button>
                 <button
                   type="button"
                   onClick={handleDocSubmit}
-                  disabled={!allDocsReady}
+                  disabled={!allDocsReady || isSubmitting}
                   className="sketch-btn sketch-btn--tomato disabled:opacity-50 disabled:cursor-not-allowed"
                   data-testid="driver-submit"
                 >
-                  Submit for verification
+                  {isSubmitting ? "Uploading..." : "Submit for verification"}
                 </button>
                 <span className="font-hand text-base text-ink/70">
                   {allDocsReady
@@ -604,12 +916,22 @@ export default function DriverOnboardingPage() {
                         {upiQr ? "Replace QR code" : "Upload UPI QR"}
                       </label>
                       <p className="mt-2 font-hand text-sm text-ink/70">
-                        {upiQr ? `Selected: ${upiQr.name}` : "No QR selected"}
+                        {upiQr
+                          ? `Selected: ${upiQr.name}`
+                          : uploadedDocs.upi_qr
+                          ? "✓ Previously uploaded QR code"
+                          : "No QR selected"}
                       </p>
                     </div>
                   </div>
                 </motion.div>
               </section>
+
+              {submitError && (
+                <div className="p-3 border-[2.5px] border-tomato bg-tomato/5 rounded-2xl text-tomato font-hand text-base">
+                  {submitError}
+                </div>
+              )}
 
               <section className="grid md:grid-cols-2 gap-6">
                 <div className="sketch-card !p-6 bg-peach/70">
@@ -631,16 +953,21 @@ export default function DriverOnboardingPage() {
                     We will use these details for weekly payouts once you are approved.
                   </p>
                   <div className="mt-5 flex flex-wrap gap-3">
-                    <button type="button" onClick={() => setStep("docs")} className="sketch-btn">
+                    <button
+                      type="button"
+                      onClick={() => setStep("docs")}
+                      className="sketch-btn"
+                      disabled={isSubmitting}
+                    >
                       Back
                     </button>
                     <button
                       type="button"
                       onClick={handlePayoutSubmit}
-                      disabled={!payoutReady}
+                      disabled={!payoutReady || isSubmitting}
                       className="sketch-btn sketch-btn--tomato disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Finish onboarding
+                      {isSubmitting ? "Submitting..." : "Finish onboarding"}
                     </button>
                   </div>
                   <span className="mt-3 block font-hand text-base text-ink/70">

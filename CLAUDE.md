@@ -12,6 +12,7 @@ Campus Rides is a doodle-styled ride booking web app centered on student life. I
 - /student/book (booking flow + map)
 - /student/activity (ride history)
 - /student/profile (student profile)
+- /admin (admin dashboard for approving drivers, monitoring rides, and managing user coins)
 
 - Driver layout: src/app/driver/layout.tsx
   - Applies grain background and cream/ink palette
@@ -249,3 +250,25 @@ Dev dependencies:
 - Many pages are client components due to animation and browser APIs.
 - Use maplibre-gl via dynamic import to avoid SSR issues.
 - Globals and doodle styling live in src/app/globals.css.
+
+## Real-time & Database Policy Reference
+### Real-time Sync & Polling Intervals
+- **Driver Dashboard**: Polls the Supabase `rides` table every **3 seconds** (`3000ms`) for active requests matching the driver's vehicle type.
+- **Student Data / Activity**: Polls `/api/student` every **3 seconds** (`3000ms`) via React Query `refetchInterval` in `useStudent` hook, updating active ride statuses automatically.
+- **Booking Flow**: Redirects the student to `/student/activity` after 1.5 seconds automatically upon successful ride booking creation.
+
+### Database Row Level Security (RLS) policies
+The database requires RLS policies to allow drivers and students to interact correctly:
+1. **Rides SELECT for Drivers**: Drivers need permission to view unassigned pending rides. Run this in your Supabase SQL Editor:
+   ```sql
+   CREATE POLICY "Allow drivers to view pending requests" ON rides
+       FOR SELECT TO authenticated USING (status = 'requested' AND driver_id IS NULL);
+   ```
+2. **Rides UPDATE for Drivers**: Drivers need permission to update and claim unassigned rides:
+   ```sql
+   CREATE POLICY "Allow drivers to accept requests" ON rides
+       FOR UPDATE TO authenticated USING (status = 'requested' AND driver_id IS NULL)
+       WITH CHECK (driver_id = auth.uid() AND status = 'active');
+   ```
+3. **Robust Matching**: Queries match on either `ride_type` or `vehicle_type` columns via:
+   `or(ride_type.eq.${vehicleType},vehicle_type.eq.${vehicleType})`
