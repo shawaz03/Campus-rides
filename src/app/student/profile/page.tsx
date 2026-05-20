@@ -203,6 +203,22 @@ export default function ProfilePage() {
     }
   }, []);
 
+  // Auto-trigger SOS if query param is set (e.g. from Mobile Bottom Navigation)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("triggerSos") === "true") {
+        setShowSOSModal(true);
+        setSosStatus("countdown");
+        setSosCountdown(3);
+        setSosError(null);
+        // Clean up URL query parameter to prevent re-triggering on refresh
+        const newUrl = window.location.pathname;
+        window.history.replaceState(null, "", newUrl);
+      }
+    }
+  }, []);
+
   const handlePrefToggle = (id: string) => {
     setPrefs((prev) => {
       const updated = prev.map((x) => (x.id === id ? { ...x, on: !x.on } : x));
