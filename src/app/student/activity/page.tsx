@@ -13,6 +13,7 @@ import {
   ChevronUp,
   Star,
   Navigation,
+  Share2,
 } from "lucide-react";
 import { SquiggleDoodle, CoinDoodle, StarDoodle, ArrowDoodle, PinDoodle } from "@/components/doodles";
 import { useStudent } from "@/hooks/use-student";
@@ -49,9 +50,17 @@ const parseDistanceKm = (value: string | null) => {
 function RideCard({ ride, index }: { ride: StudentRide; index: number }) {
   const status = resolveStatus(ride);
   const [expanded, setExpanded] = useState(status === "active");
+  const [copied, setCopied] = useState(false);
   const cfg = STATUS_CONFIG[status];
   const driverColor = ride.driver?.color ?? "#FFD23F";
   const StatusIcon = cfg.icon;
+
+  const handleShareLiveTrip = () => {
+    const shareUrl = `${window.location.origin}/track/${ride.id}`;
+    navigator.clipboard.writeText(shareUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <motion.div
@@ -125,6 +134,15 @@ function RideCard({ ride, index }: { ride: StudentRide; index: number }) {
           <span className="flex items-center gap-1 px-3 py-1 rounded-full border-[2px] border-ink bg-cream font-hand text-sm" style={{ boxShadow: "2px 2px 0 #1B1B1F" }}>
             <MapPin size={12} /> {ride.distanceLabel ?? "--"}
           </span>
+          {(status === "active" || status === "requested") && (
+            <button
+              onClick={handleShareLiveTrip}
+              className="flex items-center gap-1 px-3 py-1 rounded-full border-[2px] border-ink bg-sky hover:bg-sky/80 transition-colors font-hand text-sm"
+              style={{ boxShadow: "2px 2px 0 #1B1B1F" }}
+            >
+              <Share2 size={12} /> {copied ? "Copied tracking link!" : "Share tracking link"}
+            </button>
+          )}
         </div>
 
         {/* Expand toggle */}

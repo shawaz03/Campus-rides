@@ -287,6 +287,10 @@ export default function BookRidePage() {
       body: JSON.stringify({
         pickupLabel: pickup.name,
         destinationLabel: destination.name,
+        pickupLat: pickup.coords[1],
+        pickupLng: pickup.coords[0],
+        destinationLat: destination.coords[1],
+        destinationLng: destination.coords[0],
         rideType,
         distanceKm,
         durationMin: durationMinutes,

@@ -41,6 +41,11 @@ export async function POST(request: Request) {
   const fare = toNumber(payload.fare);
   const scheduledAt = normalizeText(payload.scheduledAt) ?? null;
 
+  const pickupLat = toNumber(payload.pickupLat);
+  const pickupLng = toNumber(payload.pickupLng);
+  const destinationLat = toNumber(payload.destinationLat);
+  const destinationLng = toNumber(payload.destinationLng);
+
   if (!pickupLabel || !destinationLabel || !rideType || !paymentMethod) {
     return NextResponse.json({ error: "Missing ride details" }, { status: 400 });
   }
@@ -67,6 +72,10 @@ export async function POST(request: Request) {
     duration_min: durationMin,
     fare,
     scheduled_at: scheduledAt,
+    pickup_lat: pickupLat,
+    pickup_lng: pickupLng,
+    destination_lat: destinationLat,
+    destination_lng: destinationLng,
   };
 
   const { data: rideData, error: rideError } = await supabase

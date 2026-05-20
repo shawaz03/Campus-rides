@@ -28,6 +28,12 @@ export type StudentRide = {
   durationLabel: string | null;
   scheduledAt: string | null;
   completedAt: string | null;
+  pickupLat?: number | null;
+  pickupLng?: number | null;
+  destinationLat?: number | null;
+  destinationLng?: number | null;
+  currentLat?: number | null;
+  currentLng?: number | null;
   driver?: {
     name: string | null;
     rating: number | null;

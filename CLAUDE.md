@@ -272,3 +272,12 @@ The database requires RLS policies to allow drivers and students to interact cor
    ```
 3. **Robust Matching**: Queries match on either `ride_type` or `vehicle_type` columns via:
    `or(ride_type.eq.${vehicleType},vehicle_type.eq.${vehicleType})`
+
+### Emergency SOS Alerts Schema & RLS
+- **Table**: `sos_alerts` tracks student emergency triggers.
+- **Rides Flag**: Column `is_emergency BOOLEAN DEFAULT FALSE` flags rides undergoing active SOS.
+- **RLS Policies**:
+  - `Allow students to insert their own SOS alerts` (authenticated INSERT policy matching student_id).
+  - `Allow students to view their own SOS alerts` (authenticated SELECT policy matching student_id).
+  - `Allow authenticated to read all SOS alerts` (authenticated SELECT policy for security/drivers).
+  - `Allow authenticated to update SOS alerts` (authenticated UPDATE policy for resolving alerts).

@@ -14,7 +14,13 @@ async function main() {
     return;
   }
   const data = await res.json();
-  console.log('Paths:', Object.keys(data.paths || {}));
+  const ridesDefinition = data.definitions?.rides;
+  if (ridesDefinition) {
+    console.log('Rides Columns:');
+    console.log(JSON.stringify(ridesDefinition.properties, null, 2));
+  } else {
+    console.log('Rides definition not found. Definitions available:', Object.keys(data.definitions || {}));
+  }
 }
 
 main();

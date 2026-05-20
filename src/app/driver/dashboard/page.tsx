@@ -30,6 +30,13 @@ type DriverRide = {
   completedAt: string | null;
   createdAt: string | null;
   studentId: string | null;
+  isEmergency?: boolean;
+  pickupLat?: number | null;
+  pickupLng?: number | null;
+  destinationLat?: number | null;
+  destinationLng?: number | null;
+  currentLat?: number | null;
+  currentLng?: number | null;
 };
 
 const toNumber = (value: unknown) => {
@@ -85,6 +92,13 @@ const toDriverRide = (row: RideRow): DriverRide => ({
   completedAt: pickLabel(row.completed_at, row.completedAt),
   createdAt: pickLabel(row.created_at, row.createdAt),
   studentId: typeof row.student_id === "string" ? row.student_id : null,
+  isEmergency: Boolean(row.is_emergency ?? false),
+  pickupLat: toNumber(row.pickup_lat),
+  pickupLng: toNumber(row.pickup_lng),
+  destinationLat: toNumber(row.destination_lat),
+  destinationLng: toNumber(row.destination_lng),
+  currentLat: toNumber(row.current_lat),
+  currentLng: toNumber(row.current_lng),
 });
 
 function DashboardLoading() {
@@ -151,6 +165,10 @@ export default function DriverDashboardPage() {
   const [driverVehicleType, setDriverVehicleType] = useState<string | null>(null);
   const [actionId, setActionId] = useState<string | null>(null);
 
+  const activeRide = useMemo(() => {
+    return history.find((ride) => ride.status === "active");
+  }, [history]);
+
   const totalEarnings = useMemo(() => {
     return history
       .filter((ride) => ride.status === "completed" && typeof ride.fare === "number")
@@ -160,6 +178,63 @@ export default function DriverDashboardPage() {
   const completedCount = useMemo(() => {
     return history.filter((ride) => ride.status === "completed").length;
   }, [history]);
+
+  // Stream live location coordinates to database when a ride is active
+  useEffect(() => {
+    if (!activeRide) return;
+
+    let watchId: number | null = null;
+    let intervalId: any = null;
+
+    if (typeof window !== "undefined" && navigator.geolocation) {
+      // 1. Start browser GPS watch
+      watchId = navigator.geolocation.watchPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          await supabase
+            .from("rides")
+            .update({ current_lat: latitude, current_lng: longitude })
+            .eq("id", activeRide.id);
+        },
+        (err) => {
+          console.warn("watchPosition error:", err);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+
+      // 2. Simulated route movement fallback (for stationary browser testing)
+      if (
+        activeRide.pickupLat &&
+        activeRide.pickupLng &&
+        activeRide.destinationLat &&
+        activeRide.destinationLng
+      ) {
+        let step = 0;
+        const totalSteps = 20;
+        const startLat = activeRide.pickupLat;
+        const startLng = activeRide.pickupLng;
+        const endLat = activeRide.destinationLat;
+        const endLng = activeRide.destinationLng;
+
+        intervalId = setInterval(async () => {
+          step = (step + 1) % (totalSteps + 1);
+          const ratio = step / totalSteps;
+          const simLat = startLat + (endLat - startLat) * ratio;
+          const simLng = startLng + (endLng - startLng) * ratio;
+
+          await supabase
+            .from("rides")
+            .update({ current_lat: simLat, current_lng: simLng })
+            .eq("id", activeRide.id);
+        }, 5000);
+      }
+    }
+
+    return () => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      if (intervalId !== null) clearInterval(intervalId);
+    };
+  }, [activeRide?.id, supabase]);
 
   const loadDashboard = async () => {
     setError(null);
@@ -206,7 +281,7 @@ export default function DriverDashboardPage() {
     let requestsQuery = supabase
       .from("rides")
       .select(
-        "id, status, fare, vehicle_type, ride_type, pickup_label, destination_label, distance_km, duration_min, scheduled_at, created_at, student_id, driver_id"
+        "id, status, fare, vehicle_type, ride_type, pickup_label, destination_label, distance_km, duration_min, scheduled_at, created_at, student_id, driver_id, pickup_lat, pickup_lng, destination_lat, destination_lng, current_lat, current_lng, is_emergency"
       )
       .eq("status", "requested")
       .is("driver_id", null);
@@ -222,7 +297,7 @@ export default function DriverDashboardPage() {
     const historyRes = await supabase
       .from("rides")
       .select(
-        "id, status, fare, vehicle_type, ride_type, pickup_label, destination_label, distance_km, duration_min, completed_at, created_at, student_id, driver_id"
+        "id, status, fare, vehicle_type, ride_type, pickup_label, destination_label, distance_km, duration_min, completed_at, created_at, student_id, driver_id, pickup_lat, pickup_lng, destination_lat, destination_lng, current_lat, current_lng, is_emergency"
       )
       .eq("driver_id", user.id)
       .order("created_at", { ascending: false })
@@ -337,6 +412,80 @@ export default function DriverDashboardPage() {
               {error && (
                 <div className="sketch-card !p-5 bg-peach/60 font-hand text-base text-ink">
                   {error}
+                </div>
+              )}
+
+              {activeRide && (
+                <div
+                  className={`sketch-card !p-6 border-[2.5px] border-ink relative overflow-hidden transition-colors ${
+                    activeRide.isEmergency ? "bg-tomato/15 border-tomato" : "bg-leaf/10"
+                  }`}
+                  style={{ boxShadow: "6px 6px 0 #1B1B1F" }}
+                >
+                  {activeRide.isEmergency && (
+                    <div className="mb-4 p-4 bg-[#FF5A36] text-white border-[2.5px] border-ink rounded-xl flex items-start gap-3 animate-bounce">
+                      <span className="text-2xl mt-0.5">🚨</span>
+                      <div className="flex-1">
+                        <p className="font-marker text-lg uppercase tracking-wide">Emergency SOS Active!</p>
+                        <p className="font-hand text-sm opacity-95">
+                          The student triggered SOS. Safely halt, check their status, and call Campus Security (100) or emergency contacts immediately!
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="absolute -top-3 -right-3 w-12 float-c pointer-events-none">
+                    <Star color={activeRide.isEmergency ? "#FF5A36" : "#7BC950"} />
+                  </div>
+                  <p className={`font-scribble text-xl ${activeRide.isEmergency ? "text-tomato" : "text-leaf"}`}>
+                    {activeRide.isEmergency ? "~ emergency alert ~" : "~ trip in progress ~"}
+                  </p>
+                  <h3 className={`font-marker text-3xl mt-1 ${activeRide.isEmergency ? "text-tomato animate-pulse" : ""}`}>
+                    {activeRide.isEmergency ? "EMERGENCY ACTIVE" : "Active Ride"}
+                  </h3>
+                  
+                  <div className="mt-4 grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <p className="font-hand text-sm text-ink/60">from</p>
+                      <p className="font-marker text-lg">{activeRide.pickupLabel}</p>
+                      <p className="font-hand text-sm text-ink/60 mt-2">to</p>
+                      <p className="font-marker text-lg">{activeRide.destinationLabel}</p>
+                    </div>
+                    <div className="flex flex-col justify-between items-end text-right">
+                      <div>
+                        <p className="font-marker text-3xl text-tomato">₹{activeRide.fare}</p>
+                        <p className="font-hand text-base text-ink/70 mt-1">
+                          {activeRide.distanceLabel} • {activeRide.durationLabel}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 mt-4">
+                        <span className="relative inline-flex w-3 h-3">
+                          <span className="absolute inset-0 rounded-full bg-leaf opacity-70 animate-ping" />
+                          <span className="relative w-3 h-3 rounded-full bg-leaf border-[1.5px] border-ink" />
+                        </span>
+                        <span className="font-hand text-sm text-ink/80 animate-pulse">📍 Sharing live location…</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setActionId(activeRide.id);
+                        await supabase
+                          .from("rides")
+                          .update({ status: "completed", completed_at: new Date().toISOString() })
+                          .eq("id", activeRide.id);
+                        setActionId(null);
+                        loadDashboard();
+                      }}
+                      disabled={actionId === activeRide.id}
+                      className="sketch-btn sketch-btn--tomato !py-3 !px-6 !text-lg w-full sm:w-auto disabled:opacity-60"
+                    >
+                      Complete Ride & Collect Cash
+                    </button>
+                  </div>
                 </div>
               )}
 

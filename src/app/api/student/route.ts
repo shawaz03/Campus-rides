@@ -74,7 +74,7 @@ export async function GET() {
   const profileRes = await supabase
     .from("students")
     .select(
-      "id, user_id, name, email, college_id, coins_balance, ride_streak, emergency_contact, trusted_drivers"
+      "user_id, name, email, college_id, coins_balance, ride_streak, emergency_contact, trusted_drivers"
     )
     .eq("user_id", user.id)
     .maybeSingle();
@@ -86,7 +86,7 @@ export async function GET() {
       : null;
 
     profile = {
-      id: String(row.user_id ?? row.id ?? user.id),
+      id: String(row.user_id ?? user.id),
       name: typeof row.name === "string" ? row.name : null,
       email: typeof row.email === "string" ? row.email : null,
       collegeId: (row.college_id as string | number | null | undefined) ?? null,
@@ -100,15 +100,39 @@ export async function GET() {
   const ridesRes = await supabase
     .from("rides")
     .select(
-      "id, status, fare, ride_type, pickup_label, destination_label, distance_km, duration_min, scheduled_at, completed_at, created_at"
+      `
+        id, status, fare, ride_type, pickup_label, destination_label, distance_km, duration_min, scheduled_at, completed_at, created_at,
+        pickup_lat, pickup_lng, destination_lat, destination_lng, current_lat, current_lng, driver_id
+      `
     )
     .eq("student_id", user.id)
     .order("created_at", { ascending: false })
     .limit(40);
 
+  // In-memory join: collect unique non-null driver IDs from the returned rides
+  const driverIds = Array.isArray(ridesRes.data)
+    ? Array.from(new Set(ridesRes.data.map((r) => r.driver_id).filter(Boolean)))
+    : [];
+
+  let driversMap: Record<string, any> = {};
+
+  if (driverIds.length > 0) {
+    const { data: driversData } = await supabase
+      .from("drivers")
+      .select("user_id, name, rating, vehicle_type, is_approved")
+      .in("user_id", driverIds);
+
+    if (Array.isArray(driversData)) {
+      driversData.forEach((d) => {
+        driversMap[d.user_id] = d;
+      });
+    }
+  }
+
   const rides: StudentRide[] = Array.isArray(ridesRes.data)
     ? ridesRes.data.map((ride) => {
         const row = ride as Record<string, unknown>;
+        const driverRow = row.driver_id ? driversMap[row.driver_id as string] : null;
         return {
           id: String(row.id ?? ""),
           status: String(row.status ?? "unknown"),
@@ -126,13 +150,27 @@ export async function GET() {
           durationLabel: formatDuration(row.duration_min ?? row.duration),
           scheduledAt: pickLabel(row.scheduled_at, row.scheduledAt),
           completedAt: pickLabel(row.completed_at, row.completedAt),
+          pickupLat: toNumber(row.pickup_lat),
+          pickupLng: toNumber(row.pickup_lng),
+          destinationLat: toNumber(row.destination_lat),
+          destinationLng: toNumber(row.destination_lng),
+          currentLat: toNumber(row.current_lat),
+          currentLng: toNumber(row.current_lng),
+          driver: driverRow ? {
+            name: typeof driverRow.name === "string" ? driverRow.name : null,
+            rating: toNumber(driverRow.rating),
+            vehicle: typeof driverRow.vehicle_type === "string" ? driverRow.vehicle_type : null,
+            plate: null,
+            trusted: Boolean(driverRow.is_approved),
+            color: null,
+          } : null,
         };
       })
     : [];
 
   const driversRes = await supabase
     .from("drivers")
-    .select("id, name, rating, vehicle_type, vehicle_no, is_approved, is_available")
+    .select("user_id, name, rating, vehicle_type, vehicle_no, is_approved, is_available")
     .eq("is_available", true)
     .eq("is_approved", true)
     .limit(6);
@@ -141,7 +179,7 @@ export async function GET() {
     ? driversRes.data.map((driver) => {
         const row = driver as Record<string, unknown>;
         return {
-          id: String(row.id ?? ""),
+          id: String(row.user_id ?? ""),
           name: typeof row.name === "string" ? row.name : null,
           rating: toNumber(row.rating),
           vehicleType: typeof row.vehicle_type === "string" ? row.vehicle_type : null,
