@@ -85,7 +85,7 @@ const Hero = () => {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="mt-3 font-marker leading-[1] text-[clamp(2rem,5.5vw,5rem)] whitespace-nowrap"
+            className="mt-3 font-marker leading-[1] text-[clamp(2rem,5.5vw,5rem)] whitespace-normal sm:whitespace-nowrap"
             data-testid="hero-title"
           >
             Book your <span className="scribble">ride</span>.<br />
