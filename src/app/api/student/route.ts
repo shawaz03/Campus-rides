@@ -95,6 +95,43 @@ export async function GET() {
       emergencyContact: normalizeEmergencyContact(row.emergency_contact),
       trustedDrivers,
     };
+  } else if (!profileRes.error && !profileRes.data) {
+    // Automatically create profile record if missing
+    const defaultName = (user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.email?.split("@")[0] ?? "Student") as string;
+    const { data: newProfileData, error: insertError } = await supabase
+      .from("students")
+      .insert({
+        user_id: user.id,
+        name: defaultName,
+        email: user.email ?? "",
+        college_id: "CR-2026",
+        coins_balance: 100, // welcome bonus
+        ride_streak: 0,
+      })
+      .select(
+        "user_id, name, email, college_id, coins_balance, ride_streak, emergency_contact, trusted_drivers"
+      )
+      .maybeSingle();
+
+    if (!insertError && newProfileData) {
+      const row = newProfileData as Record<string, unknown>;
+      const trustedDrivers = Array.isArray(row.trusted_drivers)
+        ? row.trusted_drivers.map((item) => String(item))
+        : null;
+
+      profile = {
+        id: String(row.user_id ?? user.id),
+        name: typeof row.name === "string" ? row.name : null,
+        email: typeof row.email === "string" ? row.email : null,
+        collegeId: (row.college_id as string | number | null | undefined) ?? null,
+        coinsBalance: toNumber(row.coins_balance),
+        rideStreak: toNumber(row.ride_streak),
+        emergencyContact: normalizeEmergencyContact(row.emergency_contact),
+        trustedDrivers,
+      };
+    } else {
+      console.error("Auto profile creation failed:", insertError);
+    }
   }
 
   const ridesRes = await supabase
@@ -114,7 +151,7 @@ export async function GET() {
     ? Array.from(new Set(ridesRes.data.map((r) => r.driver_id).filter(Boolean)))
     : [];
 
-  let driversMap: Record<string, any> = {};
+  const driversMap: Record<string, { name?: string | null; rating?: number | null; vehicle_type?: string | null; is_approved?: boolean | null }> = {};
 
   if (driverIds.length > 0) {
     const { data: driversData } = await supabase

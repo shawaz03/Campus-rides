@@ -280,11 +280,11 @@ export default function StudentHome() {
 
       {/* ── Live driver activity ── */}
       <section
-        className="relative border-[2.5px] border-ink rounded-[32px_10px_28px_12px/12px_28px_10px_32px] p-6 sm:p-8 bg-white overflow-hidden"
+        className="relative border-[2.5px] border-ink rounded-[32px_10px_28px_12px/12px_28px_10px_32px] p-6 sm:p-8 bg-white"
         style={{ boxShadow: "6px 6px 0 #1B1B1F" }}
         data-testid="live-drivers"
       >
-        <div className="absolute -top-4 right-6 w-14 float-c"><PaperPlane /></div>
+        <div className="absolute top-6 right-6 w-14 float-c"><PaperPlane /></div>
         <div className="flex items-end justify-between mb-5 flex-wrap gap-3">
           <div>
             <p className="font-scribble text-xl text-tomato flex items-center gap-2">

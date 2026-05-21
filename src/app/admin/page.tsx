@@ -6,36 +6,58 @@ import { AnimatePresence, motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import {
   CarMascot,
-  CloudDoodle,
-  SunDoodle,
-  StarDoodle,
-  BlobDoodle,
-  SquiggleDoodle,
   ArrowDoodle,
-  PinDoodle,
-  CoinDoodle,
-  HeartDoodle,
-  SkateDoodle,
   ChatDoodle,
   PaperPlane,
   FriendMascot,
 } from "@/components/doodles";
 import {
-  AadhaarDoodle,
-  AutoDoodle,
-  BankDoodle,
-  BikeDoodle,
-  CabDoodle,
   Cloud,
-  LicenseDoodle,
-  RCDoodle,
   Star,
   Sun,
-  UpiDoodle,
 } from "@/components/driver/VehicleDoodles";
 
 type Tab = "students" | "drivers";
-type ReviewStatus = "approved" | "pending" | "rejected";
+
+interface AdminStudent {
+  id: string;
+  name: string;
+  email?: string;
+  college_id?: string;
+  coins_balance?: number;
+  ride_streak?: number;
+  emergency_contact?: string;
+}
+
+interface AdminDriver {
+  user_id: string;
+  email: string;
+  phone: string;
+  rating: number;
+  vehicle_type: string;
+  is_approved: boolean;
+  status: string;
+  created_at: string;
+}
+
+interface AdminVehicle {
+  vehicle_type: string;
+  vehicle_model: string;
+  vehicle_number: string;
+}
+
+interface AdminDocument {
+  doc_type: string;
+  status: string;
+  file_path: string;
+}
+
+interface AdminPayout {
+  accountHolderName?: string;
+  accountNumber?: string;
+  ifscCode?: string;
+  upiId?: string;
+}
 
 // High-fidelity Mock Data Fallbacks
 const MOCK_STUDENTS = [
@@ -110,7 +132,7 @@ const MOCK_DRIVERS = [
   },
 ];
 
-const MOCK_VEHICLES: Record<string, any> = {
+const MOCK_VEHICLES = {
   mock_driver_1: {
     vehicle_type: "cab",
     vehicle_model: "Maruti Suzuki Dzire",
@@ -128,7 +150,7 @@ const MOCK_VEHICLES: Record<string, any> = {
   },
 };
 
-const MOCK_PAYOUTS: Record<string, any> = {
+const MOCK_PAYOUTS = {
   mock_driver_1: {
     accountHolderName: "Vikram Singh",
     accountNumber: "10928374656",
@@ -152,12 +174,46 @@ const MOCK_PAYOUTS: Record<string, any> = {
 export default function AdminDashboardPage() {
   const supabase = useMemo(() => createClient(), []);
 
+  // Admin Portal Authentication
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
+  const [adminUser, setAdminUser] = useState("");
+  const [adminPass, setAdminPass] = useState("");
+  const [loginError, setLoginError] = useState("");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const auth = sessionStorage.getItem("campus-rides-admin-auth");
+      if (auth === "true") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setIsAdminAuthenticated(true);
+      }
+    }
+  }, []);
+
+  const handleAdminLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminUser === "admin" && adminPass === "admin-campus-rides") {
+      setIsAdminAuthenticated(true);
+      sessionStorage.setItem("campus-rides-admin-auth", "true");
+      setLoginError("");
+    } else {
+      setLoginError("Invalid admin username or password.");
+    }
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdminAuthenticated(false);
+    sessionStorage.removeItem("campus-rides-admin-auth");
+  };
+
   const [activeTab, setActiveTab] = useState<Tab>("students");
-  const [students, setStudents] = useState<any[]>([]);
-  const [drivers, setDrivers] = useState<any[]>([]);
-  
-  const [isLoading, setIsLoading] = useState(true);
+  const [students, setStudents] = useState<AdminStudent[]>([]);
+  const [drivers, setDrivers] = useState<AdminDriver[]>([]);
   const [isSandbox, setIsSandbox] = useState(false);
+  const [isStudentsSandbox, setIsStudentsSandbox] = useState(false);
+  const [isDriversSandbox, setIsDriversSandbox] = useState(false);
+  const [studentErrorMsg, setStudentErrorMsg] = useState<string | null>(null);
+  const [driverErrorMsg, setDriverErrorMsg] = useState<string | null>(null);
 
   // Search & Filters
   const [studentSearch, setStudentSearch] = useState("");
@@ -165,10 +221,10 @@ export default function AdminDashboardPage() {
   const [driverFilter, setDriverFilter] = useState<string>("all");
 
   // Driver details modal
-  const [selectedDriver, setSelectedDriver] = useState<any | null>(null);
-  const [selectedDriverVehicle, setSelectedDriverVehicle] = useState<any | null>(null);
-  const [selectedDriverDocs, setSelectedDriverDocs] = useState<any[]>([]);
-  const [selectedDriverPayout, setSelectedDriverPayout] = useState<any | null>(null);
+  const [selectedDriver, setSelectedDriver] = useState<AdminDriver | null>(null);
+  const [selectedDriverVehicle, setSelectedDriverVehicle] = useState<AdminVehicle | null>(null);
+  const [selectedDriverDocs, setSelectedDriverDocs] = useState<AdminDocument[]>([]);
+  const [selectedDriverPayout, setSelectedDriverPayout] = useState<AdminPayout | null>(null);
   const [docBlobUrls, setDocBlobUrls] = useState<Record<string, string>>({});
   const [loadingDetails, setLoadingDetails] = useState(false);
 
@@ -181,42 +237,74 @@ export default function AdminDashboardPage() {
 
   // Load live data from Supabase
   const loadData = async () => {
-    setIsLoading(true);
+    setStudentErrorMsg(null);
+    setDriverErrorMsg(null);
     try {
       const { data: liveStudents, error: studentErr } = await supabase
         .from("students")
         .select("*");
       
+      if (studentErr) {
+        setStudentErrorMsg(`Error: ${studentErr.message} (Code: ${studentErr.code})`);
+        setStudents(MOCK_STUDENTS);
+        setIsStudentsSandbox(true);
+      } else if (!liveStudents || liveStudents.length === 0) {
+        setStudentErrorMsg("No student rows found in database.");
+        setStudents(MOCK_STUDENTS);
+        setIsStudentsSandbox(true);
+      } else {
+        const mappedStudents = (liveStudents as { id?: string; user_id?: string; name?: string; full_name?: string; email?: string; coins_balance?: number; ride_streak?: number; emergency_contact?: string }[]).map((s) => ({
+          ...s,
+          id: s.id || s.user_id || "",
+          name: s.name || s.full_name || s.email?.split("@")[0] || "Student",
+        }));
+        setStudents(mappedStudents as AdminStudent[]);
+        setIsStudentsSandbox(false);
+      }
+
       const { data: liveDrivers, error: driverErr } = await supabase
         .from("drivers")
         .select("*");
 
-      if (studentErr || driverErr || (!liveStudents?.length && !liveDrivers?.length)) {
-        // Fallback to sandbox mock data
-        setStudents(MOCK_STUDENTS);
+      if (driverErr) {
+        setDriverErrorMsg(`Error: ${driverErr.message} (Code: ${driverErr.code})`);
         setDrivers(MOCK_DRIVERS);
-        setIsSandbox(true);
+        setIsDriversSandbox(true);
+      } else if (!liveDrivers || liveDrivers.length === 0) {
+        setDriverErrorMsg("No driver rows found in database.");
+        setDrivers(MOCK_DRIVERS);
+        setIsDriversSandbox(true);
       } else {
-        setStudents(liveStudents || []);
-        setDrivers(liveDrivers || []);
-        setIsSandbox(false);
+        setDrivers(liveDrivers);
+        setIsDriversSandbox(false);
       }
-    } catch (err) {
-      console.error(err);
+
+      setIsSandbox(
+        studentErr || driverErr || !liveStudents?.length || !liveDrivers?.length ? true : false
+      );
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "Failed to connect to Supabase";
+      console.error("Admin loadData error:", err);
       setStudents(MOCK_STUDENTS);
       setDrivers(MOCK_DRIVERS);
+      setIsStudentsSandbox(true);
+      setIsDriversSandbox(true);
       setIsSandbox(true);
+      setStudentErrorMsg(errorMsg);
+      setDriverErrorMsg(errorMsg);
     } finally {
-      setIsLoading(false);
+      // Done loading
     }
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch driver detail files/vehicle details
-  const loadDriverDetails = async (driver: any) => {
+  const loadDriverDetails = async (driver: AdminDriver) => {
     setLoadingDetails(true);
     setSelectedDriver(driver);
     setSelectedDriverVehicle(null);
@@ -346,7 +434,7 @@ export default function AdminDashboardPage() {
       await supabase
         .from("students")
         .update({ coins_balance: newBalance })
-        .eq("id", studentId);
+        .eq("user_id", studentId);
     } catch (err) {
       console.error("Failed to update coins live", err);
     }
@@ -368,7 +456,7 @@ export default function AdminDashboardPage() {
       await supabase
         .from("students")
         .update({ ride_streak: newStreak })
-        .eq("id", studentId);
+        .eq("user_id", studentId);
     } catch (err) {
       console.error("Failed to update streak live", err);
     }
@@ -381,7 +469,7 @@ export default function AdminDashboardPage() {
       prev.map((d) => (d.user_id === driverId ? { ...d, is_approved: true, status: "approved" } : d))
     );
     if (selectedDriver) {
-      setSelectedDriver((prev: any) =>
+      setSelectedDriver((prev) =>
         prev ? { ...prev, is_approved: true, status: "approved" } : null
       );
       setSelectedDriverDocs((prev) => prev.map((d) => ({ ...d, status: "approved" })));
@@ -415,7 +503,7 @@ export default function AdminDashboardPage() {
       prev.map((d) => (d.user_id === driverId ? { ...d, is_approved: false, status: rejectionText } : d))
     );
     if (selectedDriver) {
-      setSelectedDriver((prev: any) =>
+      setSelectedDriver((prev) =>
         prev ? { ...prev, is_approved: false, status: rejectionText } : null
       );
       setSelectedDriverDocs((prev) => prev.map((d) => ({ ...d, status: "rejected" })));
@@ -472,6 +560,82 @@ export default function AdminDashboardPage() {
     return { totalStudents, activeDrivers, pendingApprovals, rejectedDrivers };
   }, [students, drivers]);
 
+  if (!isAdminAuthenticated) {
+    return (
+      <div className="relative min-h-screen flex items-center justify-center bg-cream font-hand text-ink p-4">
+        {/* Decorative Floating Doodles */}
+        <div className="pointer-events-none absolute top-6 left-[4%] w-20 float-a opacity-30 sm:opacity-100">
+          <Cloud />
+        </div>
+        <div className="pointer-events-none absolute top-14 right-[6%] w-24 float-b opacity-30 sm:opacity-100">
+          <Sun />
+        </div>
+        
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="w-full max-w-md border-[2.5px] border-ink bg-white rounded-[24px_16px_22px_18px/18px_22px_16px_24px] p-8 relative overflow-hidden"
+          style={{ boxShadow: "8px 8px 0 #1B1B1F" }}
+        >
+          <div className="absolute top-2 right-2 w-10 float-c">
+            <Star color="#FFD23F" />
+          </div>
+          
+          <p className="font-scribble text-xl text-tomato text-center">~ restricted area ~</p>
+          <h2 className="font-marker text-3xl text-center mt-1 mb-6">Admin Console</h2>
+          
+          <form onSubmit={handleAdminLogin} className="space-y-4">
+            <div>
+              <label className="block font-marker text-base text-ink/80 mb-1.5">Username</label>
+              <input
+                type="text"
+                required
+                value={adminUser}
+                onChange={(e) => setAdminUser(e.target.value)}
+                placeholder="enter admin username…"
+                className="w-full px-4 py-2.5 border-[2px] border-ink rounded-lg bg-cream/30 focus:bg-white outline-none font-hand text-lg"
+              />
+            </div>
+            
+            <div>
+              <label className="block font-marker text-base text-ink/80 mb-1.5">Password</label>
+              <input
+                type="password"
+                required
+                value={adminPass}
+                onChange={(e) => setAdminPass(e.target.value)}
+                placeholder="enter password…"
+                className="w-full px-4 py-2.5 border-[2px] border-ink rounded-lg bg-cream/30 focus:bg-white outline-none font-hand text-lg"
+              />
+            </div>
+
+            {loginError && (
+              <p className="text-tomato font-hand text-base text-center animate-shake">
+                ⚠️ {loginError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="sketch-btn sketch-btn--tomato w-full mt-6 !text-lg !py-3 flex items-center justify-center gap-2"
+            >
+              Sign In to Console <ArrowDoodle className="w-5 h-3" color="#fff" />
+            </button>
+          </form>
+
+          <div className="mt-6 pt-6 border-t-[2px] border-dashed border-ink/20 text-center">
+            <p className="font-hand text-sm text-ink/65">
+              Default credentials:
+            </p>
+            <p className="font-hand text-base mt-1 font-bold">
+              User: <span className="text-tomato font-mono font-bold">admin</span> | Pass: <span className="text-tomato font-mono font-bold">admin-campus-rides</span>
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-cream font-hand text-ink pb-20">
       {/* Decorative Floating Doodles */}
@@ -490,25 +654,38 @@ export default function AdminDashboardPage() {
 
       <div className="mx-auto max-w-7xl px-6 py-12 space-y-10">
         {/* Sandbox Notice Banner */}
+        {/* Sandbox Notice Banner */}
         {isSandbox && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between border-[2.5px] border-ink bg-sun/40 p-4 rounded-2xl"
+            className="border-[2.5px] border-ink bg-sun/40 p-4 rounded-2xl space-y-2"
             style={{ boxShadow: "4px 4px 0 #1B1B1F" }}
+            data-testid="admin-sandbox-banner"
           >
-            <div className="flex items-center gap-3">
-              <span className="w-8 h-8 grid place-items-center rounded-full bg-sun border-[2px] border-ink font-marker">i</span>
-              <p className="font-hand text-base">
-                <span className="font-bold">Sandbox Mode:</span> Showing local mock data because live Supabase tables are empty or loading was bypassed.
-              </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 grid place-items-center rounded-full bg-sun border-[2px] border-ink font-marker">i</span>
+                <p className="font-hand text-base">
+                  <span className="font-bold">Database Notice:</span> One or more tables are using local mock data. See diagnostics below:
+                </p>
+              </div>
+              <button
+                onClick={loadData}
+                className="sketch-btn sketch-btn--small !py-1"
+              >
+                Refresh
+              </button>
             </div>
-            <button
-              onClick={loadData}
-              className="sketch-btn sketch-btn--small !py-1"
-            >
-              Refresh
-            </button>
+            
+            <div className="pl-11 space-y-1 font-hand text-sm text-ink/80">
+              {isStudentsSandbox && (
+                <p>• <span className="font-bold">Students Registry:</span> {studentErrorMsg || "Fallback to mock data"}</p>
+              )}
+              {isDriversSandbox && (
+                <p>• <span className="font-bold">Drivers Board:</span> {driverErrorMsg || "Fallback to mock data"}</p>
+              )}
+            </div>
           </motion.div>
         )}
 
@@ -516,8 +693,8 @@ export default function AdminDashboardPage() {
         <header className="flex flex-wrap items-center justify-between gap-6 border-b-[3px] border-ink pb-8">
           <div>
             <p className="font-scribble text-2xl text-tomato">~ admin control center ~</p>
-            <h1 className="font-marker text-4xl sm:text-5xl mt-1">
-              Campus Rides <span className="scribble">Console</span>
+            <h1 className="font-marker text-4xl sm:text-5xl mt-1 font-bold">
+              <span className="text-ink">CAMPUS</span> <span className="text-tomato">RIDES</span> <span className="scribble">Console</span>
             </h1>
             <p className="font-hand text-lg text-ink/75 max-w-2xl mt-2">
               Oversee campus logistics, distribute token rewards, and verify driver credentials.
@@ -527,6 +704,12 @@ export default function AdminDashboardPage() {
             <Link href="/" className="sketch-btn">
               Go to Home
             </Link>
+            <button
+              onClick={handleAdminLogout}
+              className="sketch-btn sketch-btn--tomato"
+            >
+              Log Out
+            </button>
           </div>
         </header>
 
@@ -566,17 +749,26 @@ export default function AdminDashboardPage() {
         {/* Tab Controls */}
         <div className="flex gap-4 border-b-[2px] border-ink pb-1">
           {[
-            { id: "students", label: "Students Registry", color: "#FFD23F" },
-            { id: "drivers", label: "Drivers Approval Board", color: "#7BC950" },
+            { id: "students", label: "Students Registry", isSandbox: isStudentsSandbox },
+            { id: "drivers", label: "Drivers Approval Board", isSandbox: isDriversSandbox },
           ].map((tab) => {
             const active = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as Tab)}
-                className="relative pb-3 px-2 font-marker text-xl sm:text-2xl focus:outline-none"
+                className="relative pb-3 px-2 font-marker text-xl sm:text-2xl focus:outline-none flex items-center gap-2"
               >
-                <span className={active ? "text-tomato" : "text-ink/60"}>{tab.label}</span>
+                <span className={active ? "text-tomato" : "text-ink/60"}>
+                  {tab.label}
+                </span>
+                <span
+                  className={`text-xs font-hand px-2 py-0.5 rounded-full border-[1.5px] border-ink ${
+                    tab.isSandbox ? "bg-sun/20 text-ink/70" : "bg-leaf/20 text-leaf-dark font-bold"
+                  }`}
+                >
+                  {tab.isSandbox ? "Sandbox" : "Live DB"}
+                </span>
                 {active && (
                   <motion.div
                     layoutId="admin-active-tab"
@@ -744,7 +936,6 @@ export default function AdminDashboardPage() {
                   filteredDrivers.map((driver) => {
                     const isApproved = driver.is_approved || driver.status === "approved";
                     const isRejected = driver.status.startsWith("rejected");
-                    const cardBg = isApproved ? "bg-white" : isRejected ? "bg-white" : "bg-sun/10";
                     const statusColor = isApproved ? "#7BC950" : isRejected ? "#FF5A36" : "#FFD23F";
                     const statusText = isApproved ? "Approved" : isRejected ? "Rejected" : "Pending";
 
@@ -975,7 +1166,7 @@ export default function AdminDashboardPage() {
                             setDrivers((prev) =>
                               prev.map((d) => (d.user_id === selectedDriver.user_id ? { ...d, is_approved: false, status: "pending" } : d))
                             );
-                            setSelectedDriver((prev: any) =>
+                            setSelectedDriver((prev) =>
                               prev ? { ...prev, is_approved: false, status: "pending" } : null
                             );
                           }}

@@ -13,12 +13,14 @@ Campus Rides is a doodle-styled ride booking web app centered on student life. I
 - /student/activity (ride history)
 - /student/profile (student profile)
 - /admin (admin dashboard for approving drivers, monitoring rides, and managing user coins)
+- /track/[rideId] (real-time tracking page for students to monitor active driver coordinates on a map)
 
 - Driver layout: src/app/driver/layout.tsx
   - Applies grain background and cream/ink palette
 - /api/geocode (Nominatim search)
 - /api/student (Supabase-backed student data)
   - Activity and wallet pull rides + ride_payments from here
+- /api/sos (student emergency SOS triggers and resolutions)
 
 ### Layouts
 - Root layout: src/app/layout.tsx
@@ -146,8 +148,13 @@ Auth pages (src/app/auth/layout.tsx) also apply Space Grotesk and Syne.
 ## Animation and motion
 - Framer Motion for component-level animations and transitions
 - GSAP + ScrollTrigger for landing page reveal sequences
+- **Hero Car entry & collision**: Coordinated GSAP timeline triggered on page load:
+  - Responsive entry start position (`startX = Math.min(window.innerWidth, 800)`) adapting to mobile viewports.
+  - Nested container structure: outer wrapper for GSAP `x` translation, inner wrapper for `mascot-wobble` CSS animation.
+  - Centered wheels rotation utilizing GSAP `svgOrigin: "100 232"` (left wheel) and `svgOrigin: "330 232"` (right wheel) to prevent off-center orbiting.
+  - Cartoon-like physical rebound and squash collision sequence when contacting the sticky board.
 - Lenis for smooth scrolling
-- CSS keyframes for floating doodles and wheel spins
+- CSS keyframes for floating doodles and wheel spins (`wheel-spin` using `transform-box: fill-box` and `transform-origin: center`)
 
 ## Assets and illustrations
 - Most visuals are inline SVGs inside:
@@ -168,8 +175,10 @@ Auth pages (src/app/auth/layout.tsx) also apply Space Grotesk and Syne.
   - Student/Driver toggle, Supabase auth, Google OAuth
 - Student UI:
   - Sidebar: src/components/student/StudentSidebar.tsx
+  - Mobile bottom navigation: src/components/student/MobileBottomNav.tsx (renders on mobile viewports for quick tab switching)
   - Page transitions: src/components/student/PageTransition.tsx
   - Map: src/components/student/RideMap.tsx
+  - Tracking Map: src/components/student/TrackingMap.tsx (renders map for live ride tracking)
 
 ## Utilities and types
 - cn utility: src/lib/utils.ts
@@ -281,3 +290,10 @@ The database requires RLS policies to allow drivers and students to interact cor
   - `Allow students to view their own SOS alerts` (authenticated SELECT policy matching student_id).
   - `Allow authenticated to read all SOS alerts` (authenticated SELECT policy for security/drivers).
   - `Allow authenticated to update SOS alerts` (authenticated UPDATE policy for resolving alerts).
+
+### SQL Migration & Schema Reference
+The database structures and safety policies are stored in the following root SQL files:
+- `supabase_student_schema.sql`: Full DDL schema defining the `students` table, college metadata links, coins balances, and defaults.
+- `supabase_admin_rls.sql`: Setup for Row-Level Security (RLS) policies for driver approvals, driver profiles, documents, payouts, and ride transactions.
+- `supabase_sos_migration.sql`: Configuration for the `sos_alerts` table, RLS policies for insert/select/update of emergency cases, and the `is_emergency` flag on rides.
+- `supabase_location_migration.sql`: Column definitions (`current_lat`, `current_lng`) added to the `rides` table to facilitate real-time geotracking of drivers.

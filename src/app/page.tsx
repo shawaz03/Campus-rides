@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { motion, useScroll, useTransform, AnimatePresence, useInView } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
@@ -10,6 +10,7 @@ import {
   CarMascot, CloudDoodle, SunDoodle, StarDoodle, BlobDoodle,
   SquiggleDoodle, ArrowDoodle, PinDoodle, CoinDoodle, HeartDoodle,
   SkateDoodle, ChatDoodle, PaperPlane, FriendMascot, RoadPath,
+  CampusRidesLogo,
 } from "@/components/doodles";
 import { MeetTheFleet } from "@/components/meet-the-fleet";
 
@@ -18,21 +19,15 @@ gsap.registerPlugin(ScrollTrigger);
 const Nav = () => (
   <nav data-testid="nav" className="relative z-40 mx-auto max-w-7xl px-6 pt-6 flex items-center justify-between">
     <a href="#" className="flex items-center gap-3" data-testid="logo">
-      <span className="relative w-12 h-12 grid place-items-center rounded-full border-[2.5px] border-ink bg-sun" style={{ boxShadow: "3px 3px 0 #1B1B1F" }}>
-        <svg viewBox="0 0 40 40" className="w-7 h-7">
-          <path d="M6,26 C 6,20 10,16 16,16 L 24,16 C 30,16 34,20 34,26" stroke="#1B1B1F" strokeWidth="3" strokeLinecap="round" fill="none"/>
-          <circle cx="13" cy="28" r="3.5" fill="#1B1B1F"/>
-          <circle cx="27" cy="28" r="3.5" fill="#1B1B1F"/>
-          <path d="M14,16 L 18,10 L 22,10 L 26,16" stroke="#1B1B1F" strokeWidth="2.5" strokeLinejoin="round" fill="#FF5A36"/>
-        </svg>
-      </span>
-      <span className="font-marker text-2xl tracking-wide">Campus<span className="text-tomato">Rides</span></span>
+      <CampusRidesLogo className="w-12 h-12" />
+      <span className="font-marker font-bold text-2xl tracking-wide text-ink">CAMPUS <span className="text-tomato">RIDES</span></span>
     </a>
     <div className="hidden md:flex items-center gap-8 font-hand text-xl">
       <a href="#how" className="hover:text-tomato transition-colors" data-testid="nav-how">How it works</a>
       <a href="#why" className="hover:text-tomato transition-colors" data-testid="nav-why">Why us</a>
       <a href="#voices" className="hover:text-tomato transition-colors" data-testid="nav-voices">Voices</a>
       <a href="#faq" className="hover:text-tomato transition-colors" data-testid="nav-faq">FAQ</a>
+      <Link href="/admin" className="hover:text-plum transition-colors">Admin</Link>
     </div>
     <Link href="/auth" data-testid="nav-cta" className="sketch-btn sketch-btn--tomato !py-2 !px-4 !text-base">
       Get Started <span aria-hidden>→</span>
@@ -45,6 +40,94 @@ const Hero = () => {
   const yCloud = useTransform(scrollY, [0, 600], [0, -120]);
   const ySun = useTransform(scrollY, [0, 600], [0, -60]);
   const rotateCar = useTransform(scrollY, [0, 600], [0, -6]);
+
+  const carWrapperRef = useRef<HTMLDivElement>(null);
+  const leftWheelRef = useRef<SVGGElement>(null);
+  const rightWheelRef = useRef<SVGGElement>(null);
+  const boardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!carWrapperRef.current || !leftWheelRef.current || !rightWheelRef.current || !boardRef.current) return;
+
+    const tl = gsap.timeline();
+
+    // 1. Initial positions
+    const startX = Math.min(window.innerWidth, 800);
+    gsap.set(carWrapperRef.current, { x: startX, opacity: 0 });
+    gsap.set([leftWheelRef.current, rightWheelRef.current], { rotation: 0 });
+    gsap.set(boardRef.current, { scale: 0.8, rotate: -15, opacity: 0 });
+
+    // 2. Timeline sequence
+    tl.to(boardRef.current, {
+      opacity: 1,
+      scale: 1,
+      rotate: -8,
+      duration: 0.4,
+      ease: "power2.out"
+    })
+    .to(carWrapperRef.current, {
+      opacity: 1,
+      duration: 0.3,
+      ease: "none"
+    }, "-=0.2")
+    .to(carWrapperRef.current, {
+      x: 0,
+      duration: 1.6,
+      ease: "power1.out"
+    }, "-=0.3")
+    .to(leftWheelRef.current, {
+      rotation: -1080, // Counter-clockwise matching right-to-left travel
+      svgOrigin: "100 232",
+      duration: 1.6,
+      ease: "power1.out"
+    }, "<")
+    .to(rightWheelRef.current, {
+      rotation: -1080, // Counter-clockwise matching right-to-left travel
+      svgOrigin: "330 232",
+      duration: 1.6,
+      ease: "power1.out"
+    }, "<")
+    // Collision Moment (compression)
+    .to(carWrapperRef.current, {
+      x: -12,
+      duration: 0.08,
+      ease: "power2.out"
+    })
+    .to(boardRef.current, {
+      x: -18,
+      rotate: -18,
+      duration: 0.08,
+      ease: "power2.out"
+    }, "<")
+    // Rebound
+    .to(carWrapperRef.current, {
+      x: 5,
+      duration: 0.1,
+      ease: "power2.inOut"
+    })
+    .to(boardRef.current, {
+      x: 4,
+      rotate: -5,
+      duration: 0.12,
+      ease: "power2.inOut"
+    }, "<")
+    // Settle back to resting state
+    .to(carWrapperRef.current, {
+      x: 0,
+      duration: 0.15,
+      ease: "back.out(2)"
+    })
+    .to(boardRef.current, {
+      x: 0,
+      rotate: -8,
+      duration: 0.18,
+      ease: "back.out(2)"
+    }, "<");
+
+    return () => {
+      tl.kill();
+    };
+  }, []);
 
   return (
     <header className="relative overflow-hidden pt-6 pb-28">
@@ -117,6 +200,9 @@ const Hero = () => {
             <a href="#how" data-testid="hero-cta-secondary" className="sketch-btn sketch-btn--sun">
               How it works
             </a>
+            <Link href="/admin" className="sketch-btn bg-[#9B5DE5] hover:bg-[#8042cc] text-white" style={{ boxShadow: "3px 3px 0 #1B1B1F" }}>
+              Admin Console
+            </Link>
             <span className="font-scribble text-xl text-ink/90 ml-2 hidden sm:inline">
               ↖ start here, friend
             </span>
@@ -145,28 +231,33 @@ const Hero = () => {
         <div className="md:col-span-5 relative">
           <motion.div
             style={{ rotate: rotateCar }}
-            initial={{ opacity: 0, x: 60 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2, duration: 0.7, type: "spring" as const }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
             className="relative"
           >
             <div className="absolute -inset-6 -z-10">
               <BlobDoodle className="w-full h-full" color="#FFB4A2" />
             </div>
-            <div className="mascot-wobble">
-              <CarMascot className="w-full" />
+            <div ref={carWrapperRef}>
+              <div className="mascot-wobble">
+                <CarMascot
+                  className="w-full"
+                  wheelClass="hero-wheel"
+                  leftWheelRef={leftWheelRef}
+                  rightWheelRef={rightWheelRef}
+                />
+              </div>
             </div>
-            <motion.div
-              initial={{ opacity: 0, rotate: -12, y: 20 }}
-              animate={{ opacity: 1, rotate: -8, y: 0 }}
-              transition={{ delay: 0.8 }}
-              className="absolute -bottom-2 -left-4 bg-cream border-[2.5px] border-ink p-3 font-hand text-lg max-w-[180px]"
+            <div
+              ref={boardRef}
+              className="absolute -bottom-2 -left-4 bg-cream border-[2.5px] border-ink p-3 font-hand text-lg max-w-[180px] z-10"
               style={{ boxShadow: "4px 4px 0 #1B1B1F" }}
               data-testid="hero-sticky"
             >
               &quot;Saved ₹400 + made 3 friends&quot; <br />
               <span className="font-scribble text-tomato text-xl">— Riya, 2nd yr</span>
-            </motion.div>
+            </div>
             <motion.div
               initial={{ opacity: 0, scale: 0.4 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -477,13 +568,11 @@ const Footer = () => (
     <div className="mx-auto max-w-7xl px-6 grid md:grid-cols-4 gap-10">
       <div>
         <div className="flex items-center gap-3">
-          <span className="w-10 h-10 grid place-items-center rounded-full border-[2.5px] border-cream bg-sun">
-            <span className="text-ink font-marker text-lg">CR</span>
-          </span>
-          <span className="font-marker text-2xl">Campus<span className="text-sun">Rides</span></span>
+          <CampusRidesLogo className="w-10 h-10" />
+          <span className="font-marker font-bold text-2xl text-cream">CAMPUS <span className="text-tomato">RIDES</span></span>
         </div>
         <p className="font-body text-lg mt-4 text-cream/70">
-          A little doodle of a carpool, drawn for student life.
+          Doodled carpools and shared travel, crafted for college life.
         </p>
       </div>
       {[

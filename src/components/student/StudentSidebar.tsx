@@ -16,6 +16,7 @@ import {
 import { useState } from "react";
 import { useStudent } from "@/hooks/use-student";
 import { createClient } from "@/lib/supabase/client";
+import { CampusRidesLogo } from "@/components/doodles";
 
 const NAV = [
   { href: "/student", label: "Home", icon: Home, color: "#FFD23F", testId: "nav-home" },
@@ -82,14 +83,9 @@ export default function StudentSidebar() {
         data-testid="student-topbar"
       >
         <Link href="/student" className="flex items-center gap-2" data-testid="topbar-logo">
-          <span
-            className="w-9 h-9 grid place-items-center rounded-full border-[2.5px] border-ink bg-sun"
-            style={{ boxShadow: "2px 2px 0 #1B1B1F" }}
-          >
-            <span className="font-marker text-sm">CR</span>
-          </span>
-          <span className="font-marker text-lg">
-            Campus<span className="text-tomato">Rides</span>
+          <CampusRidesLogo className="w-9 h-9" />
+          <span className="font-marker font-bold text-lg tracking-wide text-ink">
+            CAMPUS <span className="text-tomato">RIDES</span>
           </span>
         </Link>
         <button
@@ -111,14 +107,9 @@ export default function StudentSidebar() {
         data-testid="student-sidebar"
       >
         <Link href="/student" className="hidden lg:flex items-center gap-3 mb-10" data-testid="sidebar-logo">
-          <span
-            className="w-11 h-11 grid place-items-center rounded-full border-[2.5px] border-ink bg-sun"
-            style={{ boxShadow: "3px 3px 0 #1B1B1F" }}
-          >
-            <span className="font-marker text-base">CR</span>
-          </span>
-          <span className="font-marker text-xl leading-tight">
-            Campus<span className="text-tomato">Rides</span>
+          <CampusRidesLogo className="w-11 h-11" />
+          <span className="font-marker font-bold text-xl leading-tight text-ink">
+            CAMPUS <span className="text-tomato">RIDES</span>
             <span className="block font-scribble text-tomato text-sm -mt-1">~ student hub ~</span>
           </span>
         </Link>

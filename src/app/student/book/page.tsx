@@ -87,6 +87,7 @@ function PlacePicker({
 
   useEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLiveResults([]);
       setLiveStatus("idle");
       return;
@@ -120,7 +121,7 @@ function PlacePicker({
             .filter((item) => item.name && item.coords?.length === 2)
         );
         setLiveStatus("idle");
-      } catch (error) {
+      } catch {
         if (controller.signal.aborted) return;
         setLiveResults([]);
         setLiveStatus("error");
@@ -257,10 +258,7 @@ export default function BookRidePage() {
   const [booking, setBooking] = useState<"idle" | "confirming" | "booked">("idle");
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "upi">("cash");
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+
 
   const onBook = async () => {
     if (!pickup || !destination || booking === "confirming") return;
@@ -310,7 +308,7 @@ export default function BookRidePage() {
     setBooking("booked");
     setTimeout(() => {
       router.push("/student/activity");
-    }, 1500);
+    }, 5000);
   };
 
   return (
@@ -422,11 +420,11 @@ export default function BookRidePage() {
           {/* Fare summary */}
           <motion.div
             layout
-            className="border-[2.5px] border-ink rounded-[28px_10px_24px_12px/12px_24px_10px_28px] p-5 bg-sun relative overflow-hidden"
+            className="border-[2.5px] border-ink rounded-[28px_10px_24px_12px/12px_24px_10px_28px] p-5 bg-sun relative"
             style={{ boxShadow: "6px 6px 0 #1B1B1F" }}
             data-testid="fare-card"
           >
-            <div className="absolute -top-3 -right-3 w-16 float-b"><CoinDoodle /></div>
+            <div className="absolute top-4 right-4 w-12 float-b"><CoinDoodle /></div>
             <p className="font-scribble text-xl text-tomato">~ fare estimate ~</p>
             <div className="flex items-end gap-3 mt-1">
               <span className="font-marker text-5xl">₹{fare || "—"}</span>
@@ -554,6 +552,44 @@ export default function BookRidePage() {
           </motion.div>
         ))}
       </section>
+
+      {booking === "booked" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm animate-fadeIn">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-md border-[2.5px] border-ink bg-white rounded-[28px_10px_24px_12px/12px_24px_10px_28px] p-6 text-center relative overflow-hidden"
+            style={{ boxShadow: "8px 8px 0 #1B1B1F" }}
+            data-testid="booking-success-card"
+          >
+            <div className="mx-auto w-16 h-16 rounded-full border-[2.5px] border-ink bg-[#7BC950] text-white flex items-center justify-center font-marker text-3xl mb-4 shadow-[3px_3px_0_#1B1B1F]">
+              ✓
+            </div>
+            <h3 className="font-marker text-3xl mb-2 text-[#7BC950]">Successfully Booked!</h3>
+            <p className="font-hand text-lg text-ink/80 mb-4">
+              Your campus ride is locked and loaded.
+            </p>
+            
+            <div className="border-[2px] border-dashed border-ink/30 rounded-xl p-4 bg-cream/50 text-left mb-6 space-y-2">
+              <p className="font-hand text-base"><span className="font-marker">From:</span> {pickup?.name}</p>
+              <p className="font-hand text-base"><span className="font-marker">To:</span> {destination?.name}</p>
+              <div className="flex justify-between items-center pt-2 border-t border-dashed border-ink/20">
+                <span className="font-hand text-base"><span className="font-marker">Fare:</span> ₹{fare}</span>
+                <span className="font-hand text-base"><span className="font-marker">ETA:</span> {eta}</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                router.push("/student/activity");
+              }}
+              className="sketch-btn sketch-btn--tomato w-full !text-base"
+            >
+              Track on Activity Page <ArrowDoodle className="inline-block w-5 h-3 ml-2" color="#fff" />
+            </button>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

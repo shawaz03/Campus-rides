@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { CampusRidesLogo } from "@/components/doodles";
 
 type Role = "student" | "driver";
 
@@ -315,6 +316,7 @@ export default function AuthPage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFormError(null);
     setFormNotice(null);
   }, [role]);
@@ -409,19 +411,9 @@ export default function AuthPage() {
               <div className="w-full max-w-[420px] mx-auto">
                 {/* Logo / wordmark */}
                 <div className="flex items-center gap-3 mb-8" data-testid="auth-logo">
-                  <span
-                    className="relative w-11 h-11 grid place-items-center rounded-full"
-                    style={{ border: "2.5px solid #1B1B1F", background: "#FFD23F", boxShadow: "3px 3px 0 #1B1B1F" }}
-                  >
-                    <svg viewBox="0 0 40 40" className="w-7 h-7">
-                      <path d="M6,26 C 6,20 10,16 16,16 L 24,16 C 30,16 34,20 34,26" stroke="#1B1B1F" strokeWidth="3" strokeLinecap="round" fill="none" />
-                      <circle cx="13" cy="28" r="3.5" fill="#1B1B1F" />
-                      <circle cx="27" cy="28" r="3.5" fill="#1B1B1F" />
-                      <path d="M14,16 L 18,10 L 22,10 L 26,16" stroke="#1B1B1F" strokeWidth="2.5" strokeLinejoin="round" fill="#FF5A36" />
-                    </svg>
-                  </span>
-                  <span className="font-marker text-2xl tracking-wide">
-                    Campus<span style={{ color: "#FF5A36" }}>Rides</span>
+                  <CampusRidesLogo className="w-11 h-11" />
+                  <span className="font-marker font-bold text-2xl tracking-wide text-[#1B1B1F]">
+                    CAMPUS <span style={{ color: "#FF5A36" }}>RIDES</span>
                   </span>
                 </div>
 

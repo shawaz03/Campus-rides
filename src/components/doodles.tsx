@@ -20,7 +20,18 @@ interface FriendMascotProps extends DoodleProps {
   hat?: string;
 }
 
-export const CarMascot = ({ className = "" }: DoodleProps) => (
+interface CarMascotProps extends DoodleProps {
+  wheelClass?: string;
+  leftWheelRef?: React.RefObject<SVGGElement | null>;
+  rightWheelRef?: React.RefObject<SVGGElement | null>;
+}
+
+export const CarMascot = ({
+  className = "",
+  wheelClass = "wheel-spin",
+  leftWheelRef,
+  rightWheelRef,
+}: CarMascotProps) => (
   <svg viewBox="0 0 420 280" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="rough1" x="-5%" y="-5%" width="110%" height="110%">
@@ -46,13 +57,23 @@ export const CarMascot = ({ className = "" }: DoodleProps) => (
       {/* wheels */}
       <g>
         <circle cx="100" cy="232" r="28" fill="#1B1B1F"/>
-        <circle cx="100" cy="232" r="14" fill="#FDF6E3" stroke="#1B1B1F" strokeWidth="3" className="wheel-spin"/>
-        <path d="M100,222 L 100,242 M90,232 L 110,232" stroke="#1B1B1F" strokeWidth="3"/>
+        <g
+          ref={leftWheelRef}
+          className={wheelClass}
+        >
+          <circle cx="100" cy="232" r="14" fill="#FDF6E3" stroke="#1B1B1F" strokeWidth="3"/>
+          <path d="M100,222 L 100,242 M90,232 L 110,232" stroke="#1B1B1F" strokeWidth="3"/>
+        </g>
       </g>
       <g>
         <circle cx="330" cy="232" r="28" fill="#1B1B1F"/>
-        <circle cx="330" cy="232" r="14" fill="#FDF6E3" stroke="#1B1B1F" strokeWidth="3" className="wheel-spin"/>
-        <path d="M330,222 L 330,242 M320,232 L 340,232" stroke="#1B1B1F" strokeWidth="3"/>
+        <g
+          ref={rightWheelRef}
+          className={wheelClass}
+        >
+          <circle cx="330" cy="232" r="14" fill="#FDF6E3" stroke="#1B1B1F" strokeWidth="3"/>
+          <path d="M330,222 L 330,242 M320,232 L 340,232" stroke="#1B1B1F" strokeWidth="3"/>
+        </g>
       </g>
       {/* driver face */}
       <circle cx="210" cy="108" r="11" fill="#FFB4A2" stroke="#1B1B1F" strokeWidth="2.5"/>
@@ -213,3 +234,13 @@ export const RoadPath = ({ className = "" }: DoodleProps) => (
     />
   </svg>
 );
+
+export const CampusRidesLogo = ({ className = "" }: DoodleProps) => (
+  <img
+    src="/logo.png"
+    alt="Campus Rides Logo"
+    className={`rounded-full border-[2.5px] border-ink bg-[#FFD23F] object-cover ${className}`}
+    style={{ boxShadow: "3px 3px 0 #1B1B1F" }}
+  />
+);
+

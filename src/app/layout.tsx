@@ -68,8 +68,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Campus Rides - doodled lifts for student life",
-  description: "Campus Rides - Share the road. Split the gas. Befriend the lift.",
+  title: "CAMPUS RIDES — Smart College Carpools & Shared Rides",
+  description: "CAMPUS RIDES — Share the road, split the cost, and make your campus commute friendly and easy.",
+  icons: {
+    icon: "/icon.png?v=3",
+    apple: "/icon.png?v=3",
+  },
 };
 
 export default function RootLayout({

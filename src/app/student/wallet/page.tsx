@@ -7,15 +7,15 @@ import { CoinDoodle, SquiggleDoodle, StarDoodle, ArrowDoodle } from "@/component
 import { useStudent } from "@/hooks/use-student";
 
 const METHODS = [
-  { id: "upi", label: "UPI", sub: "riya@upi", icon: Smartphone, color: "#7BC950" },
+  { id: "upi", label: "UPI", sub: "Instant transfer", icon: Smartphone, color: "#7BC950" },
   { id: "card", label: "HDFC ••4421", sub: "Visa Debit", icon: CreditCard, color: "#5BC0EB" },
 ];
 
 export default function WalletPage() {
   const [topupOpen, setTopupOpen] = useState(false);
   const { data } = useStudent();
-  const rides = data?.rides ?? [];
-  const transactions = data?.transactions ?? [];
+  const rides = useMemo(() => data?.rides ?? [], [data?.rides]);
+  const transactions = useMemo(() => data?.transactions ?? [], [data?.transactions]);
   const balance = data?.profile?.coinsBalance ?? 0;
 
   const rideLabelMap = useMemo(() => {
@@ -74,7 +74,7 @@ export default function WalletPage() {
           style={{ boxShadow: "8px 8px 0 #1B1B1F" }}
           data-testid="balance-card"
         >
-          <div className="absolute -top-4 -right-2 w-24 float-c"><CoinDoodle /></div>
+          <div className="absolute top-3 right-3 w-24 float-c"><CoinDoodle /></div>
           <div className="absolute bottom-3 right-8 w-10 float-a"><StarDoodle color="#FF5A36" /></div>
           <p className="font-scribble text-2xl text-plum">~ current balance ~</p>
           <div className="flex items-end gap-2 mt-1">
