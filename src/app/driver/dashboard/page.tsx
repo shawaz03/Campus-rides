@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -212,6 +212,10 @@ export default function DriverDashboardPage() {
   const [isSandbox, setIsSandbox] = useState(false);
   const [showAcceptSuccess, setShowAcceptSuccess] = useState(false);
   const [acceptedRideDetails, setAcceptedRideDetails] = useState<DriverRide | null>(null);
+  const [showDeclineSuccess, setShowDeclineSuccess] = useState(false);
+  const [declinedRideDetails, setDeclinedRideDetails] = useState<DriverRide | null>(null);
+  const declinedIdsRef = useRef<string[]>([]);
+  const acceptedIdsRef = useRef<string[]>([]);
 
   const activeRide = useMemo(() => {
     return history.find((ride) => ride.status === "active");
@@ -294,7 +298,7 @@ export default function DriverDashboardPage() {
       setDriverId("mock_driver");
       setDriverName("Vikram");
       setDriverVehicleType("auto");
-      setRequests(MOCK_REQUESTS);
+      setRequests(MOCK_REQUESTS.filter(r => !declinedIdsRef.current.includes(r.id) && !acceptedIdsRef.current.includes(r.id)));
       setIsSandbox(true);
       setIsLoading(false);
       return;
@@ -312,7 +316,7 @@ export default function DriverDashboardPage() {
 
     if (driverRes.error) {
       setDriverVehicleType("auto");
-      setRequests(MOCK_REQUESTS);
+      setRequests(MOCK_REQUESTS.filter(r => !declinedIdsRef.current.includes(r.id) && !acceptedIdsRef.current.includes(r.id)));
       setIsSandbox(true);
       setIsLoading(false);
       return;
@@ -359,7 +363,7 @@ export default function DriverDashboardPage() {
       .limit(12);
 
     if (requestsRes.error || historyRes.error) {
-      setRequests(MOCK_REQUESTS);
+      setRequests(MOCK_REQUESTS.filter(r => !declinedIdsRef.current.includes(r.id) && !acceptedIdsRef.current.includes(r.id)));
       setIsSandbox(true);
     } else {
       setRequests(Array.isArray(requestsRes.data) ? requestsRes.data.map(toDriverRide) : []);
@@ -388,7 +392,11 @@ export default function DriverDashboardPage() {
     setActionId(rideId);
     const localRide = requests.find((r) => r.id === rideId);
     
-    if (isSandbox || !driverId) {
+    if (rideId.startsWith("mock_")) {
+      acceptedIdsRef.current.push(rideId);
+    }
+
+    if (isSandbox || !driverId || rideId.startsWith("mock_")) {
       // Sandbox mode: immediately update local state to generate card
       if (localRide) {
         const updatedRide = { ...localRide, status: "active", driverId: driverId || "mock_driver" };
@@ -425,18 +433,39 @@ export default function DriverDashboardPage() {
 
   const handleDecline = async (rideId: string) => {
     setActionId(rideId);
-    if (isSandbox) {
-      setRequests((prev) => prev.filter((r) => r.id !== rideId));
+    const localRide = requests.find((r) => r.id === rideId);
+
+    if (rideId.startsWith("mock_")) {
+      declinedIdsRef.current.push(rideId);
+    }
+
+    if (isSandbox || !driverId || rideId.startsWith("mock_")) {
+      if (localRide) {
+        setRequests((prev) => prev.filter((r) => r.id !== rideId));
+        setDeclinedRideDetails(localRide);
+      }
       setActionId(null);
+      setShowDeclineSuccess(true);
       return;
     }
-    await supabase
-      .from("rides")
-      .update({ status: "cancelled" })
-      .eq("id", rideId)
-      .is("driver_id", null);
-    setActionId(null);
-    loadDashboard();
+    try {
+      await supabase
+        .from("rides")
+        .update({ status: "cancelled" })
+        .eq("id", rideId)
+        .is("driver_id", null);
+
+      if (localRide) {
+        setDeclinedRideDetails(localRide);
+      }
+      setShowDeclineSuccess(true);
+      await loadDashboard();
+    } catch (err) {
+      console.error(err);
+      setError("Failed to decline ride.");
+    } finally {
+      setActionId(null);
+    }
   };
 
   return (
@@ -768,6 +797,44 @@ export default function DriverDashboardPage() {
               className="sketch-btn sketch-btn--tomato w-full !text-base"
             >
               Start Navigating <ArrowDoodle className="inline-block w-5 h-3 ml-2" color="#fff" />
+            </button>
+          </motion.div>
+        </div>
+      )}
+
+      {showDeclineSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm animate-fadeIn">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="w-full max-w-md border-[2.5px] border-ink bg-white rounded-[28px_10px_24px_12px/12px_24px_10px_28px] p-6 text-center relative overflow-hidden"
+            style={{ boxShadow: "8px 8px 0 #1B1B1F" }}
+            data-testid="driver-decline-success-card"
+          >
+            <div className="mx-auto w-16 h-16 rounded-full border-[2.5px] border-ink bg-tomato text-white flex items-center justify-center font-marker text-3xl mb-4 shadow-[3px_3px_0_#1B1B1F]">
+              ✓
+            </div>
+            <h3 className="font-marker text-3xl mb-2 text-tomato">Ride Declined!</h3>
+            <p className="font-hand text-lg text-ink/80 mb-4">
+              You have successfully declined the ride request.
+            </p>
+
+            {declinedRideDetails && (
+              <div className="border-[2px] border-dashed border-ink/30 rounded-xl p-4 bg-cream/50 text-left mb-6 space-y-2">
+                <p className="font-hand text-base"><span className="font-marker">Pickup:</span> {declinedRideDetails.pickupLabel}</p>
+                <p className="font-hand text-base"><span className="font-marker">Destination:</span> {declinedRideDetails.destinationLabel}</p>
+                <div className="flex justify-between items-center pt-2 border-t border-dashed border-ink/20">
+                  <span className="font-hand text-base"><span className="font-marker">Fare:</span> ₹{declinedRideDetails.fare}</span>
+                  <span className="font-hand text-base"><span className="font-marker">ETA:</span> {declinedRideDetails.durationLabel}</span>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={() => setShowDeclineSuccess(false)}
+              className="sketch-btn sketch-btn--tomato w-full !text-base"
+            >
+              Back to Dashboard
             </button>
           </motion.div>
         </div>

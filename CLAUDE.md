@@ -311,3 +311,13 @@ The database structures and safety policies are stored in the following root SQL
   - Purely decorative doodles feature the Tailwind `pointer-events-none` utility class to prevent them from intercepting mouse wheel actions or cursor hover events.
   - A `ResizeObserver` monitors changes to the body element's layout and invokes `lenis.resize()` automatically to keep dynamic height changes in sync with the smooth scroll engine.
 
+## UI/UX Modifications & Refinements
+### Admin Redundancies & Security
+- **Hero CTA**: Removed the redundant Admin Console button from the landing page Hero, as the navigation bar already includes a link to the admin dashboard.
+- **Credential Protection**: Removed default credential helper text from the Admin Console login page to ensure credentials aren't publicly exposed.
+
+### Driver Dashboard Accept/Decline Actions
+- **Interactive Action Modals**: Implemented functional Accept and Decline click handlers. Clicking "Accept" or "Decline" displays a styled popup overlay detailing the respective ride route and fare.
+- **State Persistence Across Polling Loops**: Utilized React `useRef` to store lists of accepted and declined ride IDs (`acceptedIdsRef`, `declinedIdsRef`). In sandbox mode, these IDs are filtered out of mock data dynamically, preventing active requests from reappearing during the 3-second polling interval updates.
+
+

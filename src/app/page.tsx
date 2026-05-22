@@ -200,9 +200,6 @@ const Hero = () => {
             <a href="#how" data-testid="hero-cta-secondary" className="sketch-btn sketch-btn--sun">
               How it works
             </a>
-            <Link href="/admin" className="sketch-btn bg-[#9B5DE5] hover:bg-[#8042cc] text-white" style={{ boxShadow: "3px 3px 0 #1B1B1F" }}>
-              Admin Console
-            </Link>
             <span className="font-scribble text-xl text-ink/90 ml-2 hidden sm:inline">
               ↖ start here, friend
             </span>

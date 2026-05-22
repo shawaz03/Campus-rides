@@ -622,15 +622,6 @@ export default function AdminDashboardPage() {
               Sign In to Console <ArrowDoodle className="w-5 h-3" color="#fff" />
             </button>
           </form>
-
-          <div className="mt-6 pt-6 border-t-[2px] border-dashed border-ink/20 text-center">
-            <p className="font-hand text-sm text-ink/65">
-              Default credentials:
-            </p>
-            <p className="font-hand text-base mt-1 font-bold">
-              User: <span className="text-tomato font-mono font-bold">admin</span> | Pass: <span className="text-tomato font-mono font-bold">admin-campus-rides</span>
-            </p>
-          </div>
         </motion.div>
       </div>
     );
