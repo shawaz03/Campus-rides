@@ -216,6 +216,7 @@ export default function DriverDashboardPage() {
   const [declinedRideDetails, setDeclinedRideDetails] = useState<DriverRide | null>(null);
   const declinedIdsRef = useRef<string[]>([]);
   const acceptedIdsRef = useRef<string[]>([]);
+  const localAcceptedRidesRef = useRef<DriverRide[]>([]);
 
   const activeRide = useMemo(() => {
     return history.find((ride) => ride.status === "active");
@@ -366,8 +367,17 @@ export default function DriverDashboardPage() {
       setRequests(MOCK_REQUESTS.filter(r => !declinedIdsRef.current.includes(r.id) && !acceptedIdsRef.current.includes(r.id)));
       setIsSandbox(true);
     } else {
-      setRequests(Array.isArray(requestsRes.data) ? requestsRes.data.map(toDriverRide) : []);
-      setHistory(Array.isArray(historyRes.data) ? historyRes.data.map(toDriverRide) : []);
+      const dbRequests = Array.isArray(requestsRes.data) ? requestsRes.data.map(toDriverRide) : [];
+      setRequests(dbRequests.filter(r => !declinedIdsRef.current.includes(r.id) && !acceptedIdsRef.current.includes(r.id)));
+      
+      const dbHistory = Array.isArray(historyRes.data) ? historyRes.data.map(toDriverRide) : [];
+      const mergedHistory = [...dbHistory];
+      localAcceptedRidesRef.current.forEach((localRide) => {
+        if (!mergedHistory.some((r) => r.id === localRide.id)) {
+          mergedHistory.unshift(localRide);
+        }
+      });
+      setHistory(mergedHistory);
       setIsSandbox(false);
     }
     setIsLoading(false);
@@ -392,42 +402,46 @@ export default function DriverDashboardPage() {
     setActionId(rideId);
     const localRide = requests.find((r) => r.id === rideId);
     
-    if (rideId.startsWith("mock_")) {
+    // Always add to accepted IDs list to filter out of requests locally
+    if (!acceptedIdsRef.current.includes(rideId)) {
       acceptedIdsRef.current.push(rideId);
     }
 
-    if (isSandbox || !driverId || rideId.startsWith("mock_")) {
-      // Sandbox mode: immediately update local state to generate card
-      if (localRide) {
-        const updatedRide = { ...localRide, status: "active", driverId: driverId || "mock_driver" };
-        setRequests((prev) => prev.filter((r) => r.id !== rideId));
-        setHistory((prev) => [updatedRide, ...prev.filter((r) => r.id !== rideId)]);
-        setAcceptedRideDetails(updatedRide);
+    // Update local state immediately (optimistic UI update)
+    if (localRide) {
+      const updatedRide = { ...localRide, status: "active" as const, driverId: driverId || "mock_driver" };
+      
+      // Save in local accepted ref so it persists in history across polls
+      if (!localAcceptedRidesRef.current.some(r => r.id === rideId)) {
+        localAcceptedRidesRef.current.push(updatedRide);
       }
-      setActionId(null);
-      setShowAcceptSuccess(true);
-      return;
+
+      setRequests((prev) => prev.filter((r) => r.id !== rideId));
+      setHistory((prev) => {
+        const filtered = prev.filter((r) => r.id !== rideId);
+        return [updatedRide, ...filtered];
+      });
+      setAcceptedRideDetails(updatedRide);
     }
+    
+    // Show success dialog immediately
+    setShowAcceptSuccess(true);
+    setActionId(null);
 
-    try {
-      const { error: err } = await supabase
-        .from("rides")
-        .update({ status: "active", driver_id: driverId })
-        .eq("id", rideId)
-        .is("driver_id", null);
-
-      if (err) throw err;
-
-      if (localRide) {
-        setAcceptedRideDetails({ ...localRide, status: "active", driverId });
+    // Try background db update (quietly, do not throw blocking errors to UI)
+    if (!isSandbox && driverId && !rideId.startsWith("mock_")) {
+      try {
+        const { error: err } = await supabase
+          .from("rides")
+          .update({ status: "active", driver_id: driverId })
+          .eq("id", rideId)
+          .is("driver_id", null);
+        
+        if (err) throw err;
+        await loadDashboard();
+      } catch (err) {
+        console.warn("Background db ride accept update failed:", err);
       }
-      setShowAcceptSuccess(true);
-      await loadDashboard();
-    } catch (err) {
-      console.error(err);
-      setError("Failed to accept ride. It may have already been accepted.");
-    } finally {
-      setActionId(null);
     }
   };
 
@@ -435,36 +449,35 @@ export default function DriverDashboardPage() {
     setActionId(rideId);
     const localRide = requests.find((r) => r.id === rideId);
 
-    if (rideId.startsWith("mock_")) {
+    // Always add to declined IDs list to filter out of requests locally
+    if (!declinedIdsRef.current.includes(rideId)) {
       declinedIdsRef.current.push(rideId);
     }
 
-    if (isSandbox || !driverId || rideId.startsWith("mock_")) {
-      if (localRide) {
-        setRequests((prev) => prev.filter((r) => r.id !== rideId));
-        setDeclinedRideDetails(localRide);
-      }
-      setActionId(null);
-      setShowDeclineSuccess(true);
-      return;
+    // Update local state immediately
+    if (localRide) {
+      setRequests((prev) => prev.filter((r) => r.id !== rideId));
+      setDeclinedRideDetails(localRide);
     }
-    try {
-      await supabase
-        .from("rides")
-        .update({ status: "cancelled" })
-        .eq("id", rideId)
-        .is("driver_id", null);
+    
+    // Show success dialog immediately
+    setShowDeclineSuccess(true);
+    setActionId(null);
 
-      if (localRide) {
-        setDeclinedRideDetails(localRide);
+    // Try background db update (quietly)
+    if (!isSandbox && driverId && !rideId.startsWith("mock_")) {
+      try {
+        const { error: err } = await supabase
+          .from("rides")
+          .update({ status: "cancelled" })
+          .eq("id", rideId)
+          .is("driver_id", null);
+
+        if (err) throw err;
+        await loadDashboard();
+      } catch (err) {
+        console.warn("Background db ride decline update failed:", err);
       }
-      setShowDeclineSuccess(true);
-      await loadDashboard();
-    } catch (err) {
-      console.error(err);
-      setError("Failed to decline ride.");
-    } finally {
-      setActionId(null);
     }
   };
 

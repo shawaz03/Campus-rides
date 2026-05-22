@@ -317,7 +317,7 @@ The database structures and safety policies are stored in the following root SQL
 - **Credential Protection**: Removed default credential helper text from the Admin Console login page to ensure credentials aren't publicly exposed.
 
 ### Driver Dashboard Accept/Decline Actions
-- **Interactive Action Modals**: Implemented functional Accept and Decline click handlers. Clicking "Accept" or "Decline" displays a styled popup overlay detailing the respective ride route and fare.
-- **State Persistence Across Polling Loops**: Utilized React `useRef` to store lists of accepted and declined ride IDs (`acceptedIdsRef`, `declinedIdsRef`). In sandbox mode, these IDs are filtered out of mock data dynamically, preventing active requests from reappearing during the 3-second polling interval updates.
+- **Optimistic & Error-Tolerant UI**: Clicking "Accept" or "Decline" immediately updates local component state, shows the success overlays ("Ride Accepted!" / "Ride Declined!"), and removes/moves requests without blocking on database responses. Supabase queries are attempted in the background and failures are caught silently.
+- **State Persistence Across Polling Loops**: Utilized React `useRef` to store processed ride IDs (`acceptedIdsRef`, `declinedIdsRef` and `localAcceptedRidesRef` for history). Both mock and database requests are filtered using these refs in `loadDashboard()`, ensuring that completed selections never reappear during the 3-second interval polling loop.
 
 
