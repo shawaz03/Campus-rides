@@ -297,3 +297,17 @@ The database structures and safety policies are stored in the following root SQL
 - `supabase_admin_rls.sql`: Setup for Row-Level Security (RLS) policies for driver approvals, driver profiles, documents, payouts, and ride transactions.
 - `supabase_sos_migration.sql`: Configuration for the `sos_alerts` table, RLS policies for insert/select/update of emergency cases, and the `is_emergency` flag on rides.
 - `supabase_location_migration.sql`: Column definitions (`current_lat`, `current_lng`) added to the `rides` table to facilitate real-time geotracking of drivers.
+
+## Landing Page, Animations, & Waitlist
+### GSAP Hero Animations
+- **Car Mascot Entry**: Animates from right to left (`x` translation) and collides with the floating board message.
+- **Wheel Rotation**: SVG wheels rotate counter-clockwise matching travel direction (`rotation: -1080` via custom `svgOrigin` centers).
+- **Collision Effect**: Compresses and bounces the car and board on impact to look physical and realistic.
+
+### Waitlist Card & UX Optimizations
+- **Onboarding Success Card**: Renders waitlist confirmation details, dynamically extracts campus names from emails, generates ticket IDs, and lists user benefits.
+- **Close Button**: Fully accessible absolute-positioned close button (`×`) in the top-right corner resets states (`sent = false`, clearing inputs) to return to the waitlist form.
+- **Scroll Hijacking & Event Capture Fixes**:
+  - Purely decorative doodles feature the Tailwind `pointer-events-none` utility class to prevent them from intercepting mouse wheel actions or cursor hover events.
+  - A `ResizeObserver` monitors changes to the body element's layout and invokes `lenis.resize()` automatically to keep dynamic height changes in sync with the smooth scroll engine.
+

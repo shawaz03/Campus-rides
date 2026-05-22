@@ -131,22 +131,22 @@ const Hero = () => {
 
   return (
     <header className="relative overflow-hidden pt-6 pb-28">
-      <motion.div style={{ y: yCloud }} className="absolute top-20 left-[6%] w-28 float-a">
+      <motion.div style={{ y: yCloud }} className="absolute top-20 left-[6%] w-28 float-a pointer-events-none">
         <CloudDoodle />
       </motion.div>
-      <motion.div style={{ y: yCloud }} className="absolute top-40 right-[14%] w-36 float-b">
+      <motion.div style={{ y: yCloud }} className="absolute top-40 right-[14%] w-36 float-b pointer-events-none">
         <CloudDoodle />
       </motion.div>
-      <motion.div style={{ y: ySun }} className="absolute top-10 right-[6%] w-24 float-c">
+      <motion.div style={{ y: ySun }} className="absolute top-10 right-[6%] w-24 float-c pointer-events-none">
         <SunDoodle />
       </motion.div>
-      <div className="absolute top-[42%] left-[3%] w-12 float-c">
+      <div className="absolute top-[42%] left-[3%] w-12 float-c pointer-events-none">
         <StarDoodle color="#FFD23F" />
       </div>
-      <div className="absolute top-[58%] right-[5%] w-14 float-a">
+      <div className="absolute top-[58%] right-[5%] w-14 float-a pointer-events-none">
         <StarDoodle color="#9B5DE5" />
       </div>
-      <div className="absolute top-[18%] right-[40%] w-10 opacity-80">
+      <div className="absolute top-[18%] right-[40%] w-10 opacity-80 pointer-events-none">
         <SquiggleDoodle color="#FF5A36" />
       </div>
 
@@ -236,7 +236,7 @@ const Hero = () => {
             transition={{ duration: 0.5 }}
             className="relative"
           >
-            <div className="absolute -inset-6 -z-10">
+            <div className="absolute -inset-6 -z-10 pointer-events-none">
               <BlobDoodle className="w-full h-full" color="#FFB4A2" />
             </div>
             <div ref={carWrapperRef}>
@@ -262,7 +262,7 @@ const Hero = () => {
               initial={{ opacity: 0, scale: 0.4 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.0, type: "spring" as const }}
-              className="absolute -top-4 -right-2 w-20 float-b"
+              className="absolute -top-4 -right-2 w-20 float-b pointer-events-none"
             >
               <CoinDoodle />
             </motion.div>
@@ -270,7 +270,7 @@ const Hero = () => {
               initial={{ opacity: 0, scale: 0.4 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.15, type: "spring" as const }}
-              className="absolute top-10 -left-10 w-16 float-c"
+              className="absolute top-10 -left-10 w-16 float-c pointer-events-none"
             >
               <HeartDoodle />
             </motion.div>
@@ -319,8 +319,8 @@ const How = () => {
   ];
   return (
     <section id="how" className="relative py-24" data-testid="section-how">
-      <div className="absolute top-10 left-8 w-24 float-c opacity-90"><BlobDoodle color="#FFD23F" /></div>
-      <div className="absolute bottom-20 right-10 w-28 float-a opacity-80"><BlobDoodle color="#5BC0EB" /></div>
+      <div className="absolute top-10 left-8 w-24 float-c opacity-90 pointer-events-none"><BlobDoodle color="#FFD23F" /></div>
+      <div className="absolute bottom-20 right-10 w-28 float-a opacity-80 pointer-events-none"><BlobDoodle color="#5BC0EB" /></div>
 
       <div className="mx-auto max-w-7xl px-6">
         <div className="flex items-end justify-between flex-wrap gap-4">
@@ -415,8 +415,8 @@ const Voices = () => {
   ];
   return (
     <section id="voices" className="relative py-24" data-testid="section-voices">
-      <div className="absolute -top-2 right-[8%] w-20 float-b"><PaperPlane /></div>
-      <div className="absolute bottom-10 left-[5%] w-16 float-c"><StarDoodle color="#FF5A36" /></div>
+      <div className="absolute -top-2 right-[8%] w-20 float-b pointer-events-none"><PaperPlane /></div>
+      <div className="absolute bottom-10 left-[5%] w-16 float-c pointer-events-none"><StarDoodle color="#FF5A36" /></div>
 
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center">
@@ -533,12 +533,12 @@ const Join = () => {
 
   return (
     <section id="join" className="relative py-24 overflow-hidden" data-testid="section-join">
-      <div className="absolute top-10 md:top-20 left-4 md:left-16 w-32 float-a"><CloudDoodle /></div>
-      <div className="absolute top-20 right-10 w-28 float-c"><SunDoodle /></div>
-      <div className="absolute bottom-10 left-[40%] w-20 float-b"><StarDoodle color="#FFD23F" /></div>
+      <div className="absolute top-10 md:top-20 left-4 md:left-16 w-32 float-a pointer-events-none"><CloudDoodle /></div>
+      <div className="absolute top-20 right-10 w-28 float-c pointer-events-none"><SunDoodle /></div>
+      <div className="absolute bottom-10 left-[40%] w-20 float-b pointer-events-none"><StarDoodle color="#FFD23F" /></div>
 
       <div className="mx-auto max-w-3xl px-6 text-center relative">
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-72 -z-10 opacity-70">
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-72 -z-10 opacity-70 pointer-events-none">
           <BlobDoodle color="#FFD23F" className="w-full" />
         </div>
         <p className="font-scribble text-2xl text-tomato gsap-heading">ready to hop in? ↓</p>
@@ -597,6 +597,20 @@ const Join = () => {
               className="mt-8 mx-auto max-w-lg sketch-card relative bg-[#FDF6E3] p-8 text-left border-[2.5px] border-ink overflow-visible"
               style={{ boxShadow: "6px 6px 0 #1B1B1F" }}
             >
+              <button
+                type="button"
+                onClick={() => {
+                  setSent(false);
+                  setName("");
+                  setEmail("");
+                }}
+                className="absolute -top-3.5 -right-3.5 w-9 h-9 rounded-full border-[2.5px] border-ink bg-[#FF5A36] hover:bg-tomato text-cream flex items-center justify-center font-marker text-xl transition-transform hover:scale-110 active:scale-95 cursor-pointer z-20"
+                style={{ boxShadow: "2.5px 2.5px 0 #1B1B1F" }}
+                aria-label="Close waitlist pass"
+              >
+                ×
+              </button>
+
               <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#FFD23F] border-[2px] border-ink px-4 py-1 text-base font-hand rotate-[-2deg]" style={{ boxShadow: "2px 2px 0 #1B1B1F" }}>
                 BOARDING PASS
               </div>
@@ -759,6 +773,12 @@ export default function Home() {
     gsap.ticker.lagSmoothing(0);
     lenis.on("scroll", ScrollTrigger.update);
 
+    // Watch for DOM height changes and resize Lenis automatically
+    const resizeObserver = new ResizeObserver(() => {
+      lenis.resize();
+    });
+    resizeObserver.observe(document.body);
+
     // ── GSAP section heading reveals ─────────────────────────
     const headings = gsap.utils.toArray<HTMLElement>(".gsap-heading");
     headings.forEach((el) => {
@@ -808,6 +828,7 @@ export default function Home() {
 
     return () => {
       lenis.destroy();
+      resizeObserver.disconnect();
       ScrollTrigger.getAll().forEach((t) => t.kill());
       gsap.ticker.remove((time) => lenis.raf(time * 1000));
       window.removeEventListener("mousemove", handler);
