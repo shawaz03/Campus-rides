@@ -462,15 +462,15 @@ export default function AuthPage() {
                       </p>
                       <h1 className="font-marker leading-[0.95] text-5xl md:text-6xl mt-1" data-testid="form-title">
                         {isStudent ? (
-                          <>Share the <span className="scribble">ride</span>.</>
+                          <>Hop In & <span className="scribble">Share the Ride</span>.</>
                         ) : (
-                          <>Drive and <span className="marker">earn</span>.</>
+                          <>Buckle Up & <span className="marker">Drive to Earn</span>.</>
                         )}
                       </h1>
                       <p className="font-body text-xl mt-3" style={{ color: "rgba(27,27,31,0.78)" }}>
                         {isStudent
-                          ? "Sign in to find secure college carpools, split transit costs, and catch your rides easily."
-                          : "Sign in to verify your driver profile, share seats, and start earning on campus."}
+                          ? "Connect with verified classmates for safe, affordable campus carpools and bike rides. Split cost instantly with UPI and get to class stress-free."
+                          : "Turn empty seats on your daily commute into extra income. Drive fellow students, share fuel costs, and help your campus move."}
                       </p>
                     </div>
 
@@ -622,15 +622,15 @@ export default function AuthPage() {
                   style={{ color: rightTextColor }}
                 >
                   {isStudent ? (
-                    <>WELCOME,<br />SCHOLAR!</>
+                    <>CO-TRAVEL WITH<br />CLASSMATES</>
                   ) : (
-                    <>READY TO<br />DRIVE?</>
+                    <>FUEL THE CAMPUS<br />DRIVE</>
                   )}
                 </h2>
                 <p className="font-hand text-lg mt-4" style={{ color: rightTextColor, opacity: 0.85 }}>
                   {isStudent
-                    ? "Find a ride, share petrol, never miss home."
-                    : "Pick up students, run the route, earn the trip."}
+                    ? "Get cheap bike rides, shared cabs, and quick campus transit. Save cash and make friends!"
+                    : "Set your routes, approve requests, and earn cash sharing your vehicle. Zero platform fees!"}
                 </p>
               </motion.div>
 

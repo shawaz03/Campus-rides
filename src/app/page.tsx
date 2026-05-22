@@ -507,8 +507,30 @@ const FAQ = () => {
 };
 
 const Join = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const ticketIdRef = useRef("");
+
+  useEffect(() => {
+    ticketIdRef.current = `CR-${Math.floor(1000 + Math.random() * 9000)}`;
+  }, []);
+
+  const getCampus = (emailStr: string) => {
+    try {
+      const domain = emailStr.split("@")[1];
+      if (!domain) return "Campus";
+      const parts = domain.split(".");
+      const namePart = parts[0];
+      if (namePart.length <= 4) {
+        return namePart.toUpperCase();
+      }
+      return namePart.charAt(0).toUpperCase() + namePart.slice(1);
+    } catch {
+      return "Campus";
+    }
+  };
+
   return (
     <section id="join" className="relative py-24 overflow-hidden" data-testid="section-join">
       <div className="absolute top-10 md:top-20 left-4 md:left-16 w-32 float-a"><CloudDoodle /></div>
@@ -519,9 +541,9 @@ const Join = () => {
         <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-72 -z-10 opacity-70">
           <BlobDoodle color="#FFD23F" className="w-full" />
         </div>
-        <p className="font-scribble text-2xl text-tomato gsap-heading">last stop ↓</p>
+        <p className="font-scribble text-2xl text-tomato gsap-heading">ready to hop in? ↓</p>
         <h2 className="font-marker text-5xl md:text-7xl mt-2 leading-[0.95] gsap-heading">
-          Join the ride. <br /> <span className="scribble">Let&apos;s roll.</span>
+          Hop Onboard. <br /> <span className="scribble">Save Your Seat.</span>
         </h2>
         
         <AnimatePresence mode="wait">
@@ -533,14 +555,24 @@ const Join = () => {
               transition={{ duration: 0.25 }}
             >
               <p className="font-body text-xl mt-6 text-ink">
-                Drop your college email — we&apos;ll send your campus an invite when we land.
+                Drop your name and college email to secure your spot. We&apos;ll alert you and your campus the second we launch!
               </p>
 
               <form
-                onSubmit={(e) => { e.preventDefault(); if (email) setSent(true); }}
+                onSubmit={(e) => { e.preventDefault(); if (name && email) setSent(true); }}
                 className="mt-9 flex flex-col sm:flex-row gap-4 items-center justify-center"
                 data-testid="join-form"
               >
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  type="text"
+                  required
+                  placeholder="Your Name"
+                  data-testid="join-name"
+                  className="w-full sm:w-[200px] px-5 py-3 font-hand text-xl bg-cream border-[2.5px] border-ink rounded-[10px_36px_8px_40px/40px_8px_36px_10px] focus:outline-none focus:ring-0"
+                  style={{ boxShadow: "4px 4px 0 #1B1B1F" }}
+                />
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -548,11 +580,11 @@ const Join = () => {
                   required
                   placeholder="you@yourcollege.edu"
                   data-testid="join-email"
-                  className="w-full sm:w-[360px] px-5 py-3 font-hand text-xl bg-cream border-[2.5px] border-ink rounded-[40px_8px_36px_10px/10px_36px_8px_40px] focus:outline-none focus:ring-0"
+                  className="w-full sm:w-[280px] px-5 py-3 font-hand text-xl bg-cream border-[2.5px] border-ink rounded-[40px_8px_36px_10px/10px_36px_8px_40px] focus:outline-none focus:ring-0"
                   style={{ boxShadow: "4px 4px 0 #1B1B1F" }}
                 />
                 <button type="submit" className="sketch-btn sketch-btn--tomato" data-testid="join-submit">
-                  Save my seat <ArrowDoodle className="w-7 h-5" color="#fff" />
+                  Hop In <ArrowDoodle className="w-7 h-5" color="#fff" />
                 </button>
               </form>
             </motion.div>
@@ -574,28 +606,39 @@ const Join = () => {
                   ✓
                 </div>
                 <div>
-                  <h3 className="font-marker text-2xl text-ink">You&apos;re checked in!</h3>
-                  <p className="font-hand text-lg text-ink/70">Thanks for joining the Campus Rides crew</p>
+                  <h3 className="font-marker text-2xl text-ink">Thanks for hopping in, {name}!</h3>
+                  <p className="font-hand text-lg text-ink/70">You&apos;re officially on the waitlist! ✿</p>
                 </div>
               </div>
 
               <div className="mt-5 space-y-4">
+                <div className="grid grid-cols-2 gap-4 border-b-[1.5px] border-ink/20 pb-3">
+                  <div>
+                    <span className="font-scribble text-sm text-tomato block">PASSENGER NAME</span>
+                    <span className="font-marker text-lg text-ink block truncate">{name}</span>
+                  </div>
+                  <div>
+                    <span className="font-scribble text-sm text-tomato block">CAMPUS</span>
+                    <span className="font-marker text-lg text-ink block truncate">{getCampus(email)}</span>
+                  </div>
+                </div>
+
                 <div>
-                  <span className="font-scribble text-lg text-tomato block">~ registered student email ~</span>
+                  <span className="font-scribble text-sm text-tomato block">TICKET NUMBER</span>
                   <div className="inline-block bg-[#5BC0EB]/30 border-[1.5px] border-ink px-4 py-2 font-hand text-xl mt-1 select-all rotate-[1deg]" style={{ boxShadow: "3px 3px 0 #1B1B1F" }}>
-                    {email}
+                    {ticketIdRef.current || "CR-7749"}
                   </div>
                 </div>
 
                 <p className="font-body text-lg text-ink leading-relaxed mt-2">
-                  We&apos;ve saved your backseat seat, friend! We will trigger a notification and send your campus a launch alert once we roll out.
+                  We&apos;ve saved your seat! We will trigger a notification and send your campus a launch alert once we roll out.
                 </p>
 
                 <div className="bg-[#FFB4A2]/20 border-[1.5px] border-ink/40 p-3 rounded-md mt-4">
                   <span className="font-marker text-sm text-tomato uppercase tracking-wider block mb-1">Your Benefits:</span>
                   <ul className="font-hand text-lg space-y-1 text-ink/90">
-                    <li className="flex items-center gap-2">🏍️ Access cheap, fast student bike rides</li>
-                    <li className="flex items-center gap-2">🚗 Share secure campus carpools</li>
+                    <li className="flex items-center gap-2">🏍️ Cheap, fast student bike rides</li>
+                    <li className="flex items-center gap-2">🚗 Secure campus carpools with peers</li>
                     <li className="flex items-center gap-2">💰 Instant auto-split UPI payments</li>
                   </ul>
                 </div>
