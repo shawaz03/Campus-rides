@@ -305,15 +305,15 @@ const Marquee = () => {
 const How = () => {
   const steps = [
     {
-      n: "01", t: "Choose your ride", d: "Pick what suits your trip. Bike for solo quick trips, auto for short city hops, cab for comfort or group travel. One app, every option — no switching between platforms.",
+      n: "01", t: "Choose your ride", d: "Pick the transportation option that suits your journey. Select a quick bike ride for solo campus travel, a convenient auto for local city commutes, or a comfortable cab for group travel. Access every college transport option from a single app.",
       color: "#FFD23F", icon: <PinDoodle className="w-16 h-16" />,
     },
     {
-      n: "02", t: "Get matched instantly", d: "The nearest available driver gets your request the moment you book. They confirm within 30 seconds. If they don't, we automatically move to the next driver — you never wait on a maybe.",
+      n: "02", t: "Get matched instantly", d: "Our smart peer-to-peer matching system connects you with the nearest verified campus driver instantly. Once matched, they confirm within 30 seconds, ensuring safe, reliable, and prompt transit.",
       color: "#5BC0EB", icon: <ChatDoodle className="w-20 h-16" />,
     },
     {
-      n: "03", t: "Track and ride", d: "Watch your driver arrive live on the map. Get an alert when they're 2 minutes away. Hop in, sit back — your fare is shown upfront, no surprises at the end.",
+      n: "03", t: "Track and ride", d: "Watch your driver arrive live on the map. Get an alert when they're 2 minutes away. Board the ride, travel securely — your student carpool fare is shown upfront, with no hidden charges at the end.",
       color: "#7BC950", icon: <CoinDoodle className="w-16 h-16" />,
     },
   ];
@@ -363,7 +363,7 @@ const How = () => {
 const Why = () => {
   const cards = [
     { t: "Verified classmates", d: "College email required. Real people, real campuses.", color: "#FFB4A2", icon: <HeartDoodle className="w-14 h-14" /> },
-    { t: "Fair-share petrol", d: "Auto-split by distance. No awkward Venmo math at 1am.", color: "#FFD23F", icon: <CoinDoodle className="w-14 h-14" /> },
+    { t: "Fair-share petrol", d: "Auto-split by distance. No awkward UPI split math at 1am.", color: "#FFD23F", icon: <CoinDoodle className="w-14 h-14" /> },
     { t: "Doodle-fast booking", d: "Tap, swipe, ride. Most matches happen in under 4 minutes.", color: "#5BC0EB", icon: <PaperPlane className="w-16 h-12" /> },
     { t: "Safe ratings", d: "Two-way reviews + SOS share-trip. Mom-approved.", color: "#7BC950", icon: <ChatDoodle className="w-16 h-12" /> },
     { t: "Greener footprint", d: "Each shared ride = one less car. Sad polar bears stay happy.", color: "#9B5DE5", icon: <SunDoodle className="w-14 h-14" /> },
@@ -521,36 +521,88 @@ const Join = () => {
         </div>
         <p className="font-scribble text-2xl text-tomato gsap-heading">last stop ↓</p>
         <h2 className="font-marker text-5xl md:text-7xl mt-2 leading-[0.95] gsap-heading">
-          Hop in. <br /> <span className="scribble">Let&apos;s roll.</span>
+          Join the ride. <br /> <span className="scribble">Let&apos;s roll.</span>
         </h2>
-        <p className="font-body text-xl mt-6 text-ink">
-          Drop your college email — we&apos;ll send your campus an invite when we land.
-        </p>
+        
+        <AnimatePresence mode="wait">
+          {!sent ? (
+            <motion.div
+              key="join-form-wrapper"
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+            >
+              <p className="font-body text-xl mt-6 text-ink">
+                Drop your college email — we&apos;ll send your campus an invite when we land.
+              </p>
 
-        <form
-          onSubmit={(e) => { e.preventDefault(); if (email) setSent(true); }}
-          className="mt-9 flex flex-col sm:flex-row gap-4 items-center justify-center"
-          data-testid="join-form"
-        >
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            type="email"
-            required
-            placeholder="you@yourcollege.edu"
-            data-testid="join-email"
-            className="w-full sm:w-[360px] px-5 py-3 font-hand text-xl bg-cream border-[2.5px] border-ink rounded-[40px_8px_36px_10px/10px_36px_8px_40px] focus:outline-none focus:ring-0"
-            style={{ boxShadow: "4px 4px 0 #1B1B1F" }}
-          />
-          <button type="submit" className="sketch-btn sketch-btn--tomato" data-testid="join-submit">
-            {sent ? "On the list ✓" : "Save my seat"} <ArrowDoodle className="w-7 h-5" color="#fff" />
-          </button>
-        </form>
-        {sent && (
-          <motion.p initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 font-scribble text-2xl text-leaf" data-testid="join-success">
-            see you in the back-seat, friend ✿
-          </motion.p>
-        )}
+              <form
+                onSubmit={(e) => { e.preventDefault(); if (email) setSent(true); }}
+                className="mt-9 flex flex-col sm:flex-row gap-4 items-center justify-center"
+                data-testid="join-form"
+              >
+                <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  type="email"
+                  required
+                  placeholder="you@yourcollege.edu"
+                  data-testid="join-email"
+                  className="w-full sm:w-[360px] px-5 py-3 font-hand text-xl bg-cream border-[2.5px] border-ink rounded-[40px_8px_36px_10px/10px_36px_8px_40px] focus:outline-none focus:ring-0"
+                  style={{ boxShadow: "4px 4px 0 #1B1B1F" }}
+                />
+                <button type="submit" className="sketch-btn sketch-btn--tomato" data-testid="join-submit">
+                  Save my seat <ArrowDoodle className="w-7 h-5" color="#fff" />
+                </button>
+              </form>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="join-success-card"
+              initial={{ opacity: 0, scale: 0.9, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 260, damping: 20 }}
+              className="mt-8 mx-auto max-w-lg sketch-card relative bg-[#FDF6E3] p-8 text-left border-[2.5px] border-ink overflow-visible"
+              style={{ boxShadow: "6px 6px 0 #1B1B1F" }}
+            >
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#FFD23F] border-[2px] border-ink px-4 py-1 text-base font-hand rotate-[-2deg]" style={{ boxShadow: "2px 2px 0 #1B1B1F" }}>
+                BOARDING PASS
+              </div>
+              
+              <div className="flex items-center gap-4 border-b-[2px] border-dashed border-ink/30 pb-4 mt-2">
+                <div className="w-12 h-12 rounded-full bg-[#7BC950] border-[2px] border-ink flex items-center justify-center font-marker text-2xl text-cream" style={{ boxShadow: "2px 2px 0 #1B1B1F" }}>
+                  ✓
+                </div>
+                <div>
+                  <h3 className="font-marker text-2xl text-ink">You&apos;re checked in!</h3>
+                  <p className="font-hand text-lg text-ink/70">Thanks for joining the Campus Rides crew</p>
+                </div>
+              </div>
+
+              <div className="mt-5 space-y-4">
+                <div>
+                  <span className="font-scribble text-lg text-tomato block">~ registered student email ~</span>
+                  <div className="inline-block bg-[#5BC0EB]/30 border-[1.5px] border-ink px-4 py-2 font-hand text-xl mt-1 select-all rotate-[1deg]" style={{ boxShadow: "3px 3px 0 #1B1B1F" }}>
+                    {email}
+                  </div>
+                </div>
+
+                <p className="font-body text-lg text-ink leading-relaxed mt-2">
+                  We&apos;ve saved your backseat seat, friend! We will trigger a notification and send your campus a launch alert once we roll out.
+                </p>
+
+                <div className="bg-[#FFB4A2]/20 border-[1.5px] border-ink/40 p-3 rounded-md mt-4">
+                  <span className="font-marker text-sm text-tomato uppercase tracking-wider block mb-1">Your Benefits:</span>
+                  <ul className="font-hand text-lg space-y-1 text-ink/90">
+                    <li className="flex items-center gap-2">🏍️ Access cheap, fast student bike rides</li>
+                    <li className="flex items-center gap-2">🚗 Share secure campus carpools</li>
+                    <li className="flex items-center gap-2">💰 Instant auto-split UPI payments</li>
+                  </ul>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="mt-10 flex items-center justify-center gap-6">
           <div className="w-20 mascot-wobble"><FriendMascot hat="#FF5A36" /></div>
@@ -576,16 +628,71 @@ const Footer = () => (
         </p>
       </div>
       {[
-        { t: "Riding", l: ["Find a ride", "Offer a seat", "Safety", "Pricing"] },
-        { t: "Company", l: ["About", "Careers", "Press", "Blog"] },
-        { t: "Stay close", l: ["Instagram", "Twitter", "Discord", "Campus reps"] },
+        { 
+          t: "Riding", 
+          links: [
+            { n: "Find a ride", h: "#join" }, 
+            { n: "Offer a seat", h: "/driver" }, 
+            { n: "Safety center", h: "/auth" }, 
+            { n: "Pricing & options", h: "#how" }
+          ] 
+        },
+        { 
+          t: "Company", 
+          links: [
+            { n: "Why Us", h: "#why" }, 
+            { n: "Voices & quotes", h: "#voices" }, 
+            { n: "Press kit", h: "/" }, 
+            { n: "FAQ corner", h: "#faq" }
+          ] 
+        },
+        { 
+          t: "Stay close", 
+          links: [
+            { n: "Instagram", h: "https://instagram.com" }, 
+            { n: "Twitter", h: "https://twitter.com" }, 
+            { n: "Discord Community", h: "https://discord.gg" }, 
+            { n: "Campus reps", h: "#join" }
+          ] 
+        },
       ].map((col) => (
         <div key={col.t}>
           <h4 className="font-marker text-xl text-sun">{col.t}</h4>
           <ul className="mt-3 space-y-2 font-hand text-lg text-cream/80">
-            {col.l.map((x) => (
-              <li key={x} className="hover:text-sun transition-colors cursor-pointer">{x}</li>
-            ))}
+            {col.links.map((x) => {
+              const isExternal = x.h.startsWith("http");
+              if (isExternal) {
+                return (
+                  <li key={x.n}>
+                    <a 
+                      href={x.h} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="hover:text-sun transition-colors"
+                      aria-label={`${x.n} (opens in a new tab)`}
+                    >
+                      {x.n}
+                    </a>
+                  </li>
+                );
+              }
+              if (x.h.startsWith("#")) {
+                return (
+                  <li key={x.n}>
+                    <a href={x.h} className="hover:text-sun transition-colors">
+                      {x.n}
+                    </a>
+                  </li>
+                );
+              }
+              return (
+                <li key={x.n}>
+                  <Link href={x.h} className="hover:text-sun transition-colors">
+                    {x.n}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
       ))}

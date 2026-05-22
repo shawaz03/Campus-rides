@@ -462,15 +462,15 @@ export default function AuthPage() {
                       </p>
                       <h1 className="font-marker leading-[0.95] text-5xl md:text-6xl mt-1" data-testid="form-title">
                         {isStudent ? (
-                          <>Hop <span className="scribble">in</span>.</>
+                          <>Share the <span className="scribble">ride</span>.</>
                         ) : (
-                          <>Buckle <span className="marker">up</span>.</>
+                          <>Drive and <span className="marker">earn</span>.</>
                         )}
                       </h1>
                       <p className="font-body text-xl mt-3" style={{ color: "rgba(27,27,31,0.78)" }}>
                         {isStudent
-                          ? "Sign in and find your ride before the bus leaves the gate."
-                          : "Sign in to pick up students and start your shift."}
+                          ? "Sign in to find secure college carpools, split transit costs, and catch your rides easily."
+                          : "Sign in to verify your driver profile, share seats, and start earning on campus."}
                       </p>
                     </div>
 

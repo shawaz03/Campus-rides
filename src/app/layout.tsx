@@ -68,8 +68,49 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://campus-rides.com"),
   title: "CAMPUS RIDES — Smart College Carpools & Shared Rides",
-  description: "CAMPUS RIDES — Share the road, split the cost, and make your campus commute friendly and easy.",
+  description: "Share the road, split the cost, and make your campus commute friendly and easy with Campus Rides. Safe, peer-to-peer student ridesharing.",
+  keywords: [
+    "bike ride for students",
+    "college transport app",
+    "campus carpool",
+    "campus rideshare",
+    "university carpooling",
+    "student ride sharing",
+    "safe campus commute",
+    "split ride cost college",
+    "campus travel",
+    "student commuting",
+    "campus ride sharing app",
+    "peer to peer student transit"
+  ],
+  openGraph: {
+    title: "CAMPUS RIDES — Smart College Carpools & Shared Rides",
+    description: "Share the road, split the cost, and make your campus commute friendly and easy with Campus Rides. Safe, peer-to-peer student ridesharing.",
+    url: "https://campus-rides.com",
+    siteName: "Campus Rides",
+    images: [
+      {
+        url: "/logo.png",
+        width: 800,
+        height: 600,
+        alt: "Campus Rides Logo",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CAMPUS RIDES — Smart College Carpools & Shared Rides",
+    description: "Share the road, split the cost, and make your campus commute friendly and easy with Campus Rides. Safe, peer-to-peer student ridesharing.",
+    images: ["/logo.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   icons: {
     icon: "/icon.png?v=3",
     apple: "/icon.png?v=3",
