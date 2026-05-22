@@ -131,23 +131,28 @@ const Hero = () => {
 
   return (
     <header className="relative overflow-hidden pt-6 pb-28">
-      <motion.div style={{ y: yCloud }} className="absolute top-20 left-[6%] w-28 float-a pointer-events-none">
-        <CloudDoodle />
-      </motion.div>
-      <motion.div style={{ y: yCloud }} className="absolute top-40 right-[14%] w-36 float-b pointer-events-none">
-        <CloudDoodle />
-      </motion.div>
-      <motion.div style={{ y: ySun }} className="absolute top-10 right-[6%] w-24 float-c pointer-events-none">
-        <SunDoodle />
-      </motion.div>
-      <div className="absolute top-[42%] left-[3%] w-12 float-c pointer-events-none">
-        <StarDoodle color="#FFD23F" />
-      </div>
-      <div className="absolute top-[58%] right-[5%] w-14 float-a pointer-events-none">
-        <StarDoodle color="#9B5DE5" />
-      </div>
-      <div className="absolute top-[18%] right-[40%] w-10 opacity-80 pointer-events-none">
-        <SquiggleDoodle color="#FF5A36" />
+      {/* Decorative background doodles container relative to centered content */}
+      <div className="absolute inset-0 mx-auto max-w-7xl px-6 pointer-events-none z-0">
+        <div className="relative w-full h-full">
+          <motion.div style={{ y: yCloud }} className="absolute top-20 left-[-40px] w-28 float-a hidden xl:block">
+            <CloudDoodle />
+          </motion.div>
+          <motion.div style={{ y: yCloud }} className="absolute top-40 right-[180px] w-36 float-b hidden xl:block">
+            <CloudDoodle />
+          </motion.div>
+          <motion.div style={{ y: ySun }} className="absolute top-10 right-[-30px] w-24 float-c hidden xl:block">
+            <SunDoodle />
+          </motion.div>
+          <div className="absolute top-[42%] left-[-60px] w-12 float-c hidden xl:block">
+            <StarDoodle color="#FFD23F" />
+          </div>
+          <div className="absolute top-[58%] right-[-50px] w-14 float-a hidden xl:block">
+            <StarDoodle color="#9B5DE5" />
+          </div>
+          <div className="absolute top-[18%] right-[35%] w-10 opacity-80 hidden md:block">
+            <SquiggleDoodle color="#FF5A36" />
+          </div>
+        </div>
       </div>
 
       <Nav />

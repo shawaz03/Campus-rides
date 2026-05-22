@@ -315,6 +315,8 @@ The database structures and safety policies are stored in the following root SQL
 ### Admin Redundancies & Security
 - **Hero CTA**: Removed the redundant Admin Console button from the landing page Hero, as the navigation bar already includes a link to the admin dashboard.
 - **Credential Protection**: Removed default credential helper text from the Admin Console login page to ensure credentials aren't publicly exposed.
+- **Header Doodles Alignment**: Wrapped absolute-positioned header doodles inside a centered `max-w-7xl px-6` container so their coordinates are anchored to the content boundaries (keeping the sun safely outside the "Get Started" button and the cloud safely outside the logo), and used responsive hiding (`hidden xl:block`) to prevent collisions on smaller viewports.
+
 
 ### Driver Dashboard Accept/Decline Actions
 - **Optimistic & Error-Tolerant UI**: Clicking "Accept" or "Decline" immediately updates local component state, shows the success overlays ("Ride Accepted!" / "Ride Declined!"), and removes/moves requests without blocking on database responses. Supabase queries are attempted in the background and failures are caught silently.
