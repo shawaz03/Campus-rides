@@ -132,7 +132,7 @@ const MOCK_DRIVERS = [
   },
 ];
 
-const MOCK_VEHICLES = {
+const MOCK_VEHICLES: Record<string, AdminVehicle> = {
   mock_driver_1: {
     vehicle_type: "cab",
     vehicle_model: "Maruti Suzuki Dzire",
@@ -150,7 +150,7 @@ const MOCK_VEHICLES = {
   },
 };
 
-const MOCK_PAYOUTS = {
+const MOCK_PAYOUTS: Record<string, AdminPayout> = {
   mock_driver_1: {
     accountHolderName: "Vikram Singh",
     accountNumber: "10928374656",
