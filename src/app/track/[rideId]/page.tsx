@@ -4,7 +4,10 @@ import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
-import TrackingMap from "@/components/student/TrackingMap";
+import dynamic from "next/dynamic";
+const TrackingMap = dynamic(() => import("@/components/student/TrackingMap"), {
+  ssr: false,
+});
 import {
   MapPin,
   Clock,

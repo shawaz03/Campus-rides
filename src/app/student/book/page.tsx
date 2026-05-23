@@ -25,7 +25,10 @@ import {
   SquiggleDoodle,
   ArrowDoodle,
 } from "@/components/doodles";
-import RideMap from "@/components/student/RideMap";
+import dynamic from "next/dynamic";
+const RideMap = dynamic(() => import("@/components/student/RideMap"), {
+  ssr: false,
+});
 import { createClient } from "@/lib/supabase/client";
 
 function haversine([lng1, lat1]: [number, number], [lng2, lat2]: [number, number]) {
