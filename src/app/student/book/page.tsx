@@ -28,6 +28,14 @@ import {
 import dynamic from "next/dynamic";
 const RideMap = dynamic(() => import("@/components/student/RideMap"), {
   ssr: false,
+  loading: () => (
+    <div className="w-full h-full rounded-[28px_10px_24px_12px/12px_24px_10px_28px] border-[2.5px] border-ink bg-cream grid place-items-center" style={{ boxShadow: "6px 6px 0 #1B1B1F" }}>
+      <div className="text-center">
+        <p className="font-scribble text-xl text-tomato">loading map…</p>
+        <p className="font-hand text-base text-ink/60 mt-1">hang tight!</p>
+      </div>
+    </div>
+  ),
 });
 import { createClient } from "@/lib/supabase/client";
 
