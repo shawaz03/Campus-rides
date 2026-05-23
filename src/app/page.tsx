@@ -16,7 +16,7 @@ import { MeetTheFleet } from "@/components/meet-the-fleet";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const Nav = () => (
+const Nav = ({ ySun }: { ySun?: any }) => (
   <nav data-testid="nav" className="relative z-40 mx-auto max-w-7xl px-6 pt-6 flex items-center justify-between">
     <a href="#" className="flex items-center gap-3" data-testid="logo">
       <CampusRidesLogo className="w-12 h-12" />
@@ -29,9 +29,14 @@ const Nav = () => (
       <a href="#faq" className="hover:text-tomato transition-colors" data-testid="nav-faq">FAQ</a>
       <Link href="/admin" className="hover:text-plum transition-colors">Admin</Link>
     </div>
-    <Link href="/auth" data-testid="nav-cta" className="sketch-btn sketch-btn--tomato !py-2 !px-4 !text-base">
-      Get Started <span aria-hidden>→</span>
-    </Link>
+    <div className="flex items-center gap-3 md:gap-4 relative z-10">
+      <Link href="/auth" data-testid="nav-cta" className="sketch-btn sketch-btn--tomato !py-2 !px-4 !text-base whitespace-nowrap">
+        Get Started <span aria-hidden>→</span>
+      </Link>
+      <motion.div style={ySun ? { y: ySun } : {}} className="w-14 h-14 md:w-16 md:h-16 select-none pointer-events-none flex-shrink-0 hidden sm:block">
+        <SunDoodle />
+      </motion.div>
+    </div>
   </nav>
 );
 
@@ -134,14 +139,11 @@ const Hero = () => {
       {/* Decorative background doodles container relative to centered content */}
       <div className="absolute inset-0 mx-auto max-w-7xl px-6 pointer-events-none z-0">
         <div className="relative w-full h-full">
-          <motion.div style={{ y: yCloud }} className="absolute top-20 left-[-40px] w-28 float-a hidden xl:block">
+          <motion.div style={{ y: yCloud }} className="absolute top-28 lg:left-[-10px] xl:left-[-30px] w-24 float-a hidden lg:block">
             <CloudDoodle />
           </motion.div>
-          <motion.div style={{ y: yCloud }} className="absolute top-40 right-[180px] w-36 float-b hidden xl:block">
+          <motion.div style={{ y: yCloud }} className="absolute top-40 right-[180px] w-36 float-b hidden lg:block">
             <CloudDoodle />
-          </motion.div>
-          <motion.div style={{ y: ySun }} className="absolute top-10 right-[-30px] w-24 float-c hidden xl:block">
-            <SunDoodle />
           </motion.div>
           <div className="absolute top-[42%] left-[-60px] w-12 float-c hidden xl:block">
             <StarDoodle color="#FFD23F" />
@@ -155,7 +157,7 @@ const Hero = () => {
         </div>
       </div>
 
-      <Nav />
+      <Nav ySun={ySun} />
 
       <div className="relative mx-auto max-w-7xl px-6 pt-14 md:pt-20 grid md:grid-cols-12 gap-8 items-center">
         <div className="md:col-span-7">
