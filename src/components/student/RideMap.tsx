@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { DEFAULT_CENTER } from "@/lib/ride-data";
 
 interface RideMapProps {
@@ -10,23 +10,21 @@ interface RideMapProps {
 }
 
 export default function RideMap({ pickup, destination, center = DEFAULT_CENTER }: RideMapProps) {
+  const [map, setMap] = useState<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const routeLayerRef = useRef<boolean>(false);
 
   useEffect(() => {
-    let maplibre: any;
-    let map: any;
-
     async function initMap() {
       if (!containerRef.current) return;
       // Dynamically import to avoid SSR issues
-      maplibre = await import("maplibre-gl");
+      const maplibre = await import("maplibre-gl");
 
       if (mapRef.current) return; // already initialized
 
-      map = new maplibre.Map({
+      const activeMap = new maplibre.Map({
         container: containerRef.current,
         style: {
           version: 8,
@@ -56,20 +54,20 @@ export default function RideMap({ pickup, destination, center = DEFAULT_CENTER }
         zoom: 12,
       });
 
-      mapRef.current = map;
+      mapRef.current = activeMap;
 
       // Add nav controls
-      map.addControl(new maplibre.NavigationControl(), "top-right");
+      activeMap.addControl(new maplibre.NavigationControl(), "top-right");
 
       // Add route source (empty to start)
-      map.on("load", () => {
-        map.addSource("route", {
+      activeMap.on("load", () => {
+        activeMap.addSource("route", {
           type: "geojson",
           data: { type: "Feature", geometry: { type: "LineString", coordinates: [] }, properties: {} },
         });
 
         // Dashed animated route line
-        map.addLayer({
+        activeMap.addLayer({
           id: "route-dashed",
           type: "line",
           source: "route",
@@ -96,8 +94,8 @@ export default function RideMap({ pickup, destination, center = DEFAULT_CENTER }
         const animateDash = () => {
           if (!mapRef.current) return;
           const pattern = dashPatterns[step % dashPatterns.length];
-          if (map.getLayer("route-dashed")) {
-            map.setPaintProperty("route-dashed", "line-dasharray", pattern);
+          if (activeMap.getLayer("route-dashed")) {
+            activeMap.setPaintProperty("route-dashed", "line-dasharray", pattern);
           }
           step++;
           requestAnimationFrame(animateDash);
@@ -105,6 +103,7 @@ export default function RideMap({ pickup, destination, center = DEFAULT_CENTER }
         animateDash();
 
         routeLayerRef.current = true;
+        setMap(activeMap);
       });
     }
 
@@ -115,14 +114,14 @@ export default function RideMap({ pickup, destination, center = DEFAULT_CENTER }
         mapRef.current.remove();
         mapRef.current = null;
         routeLayerRef.current = false;
+        setMap(null);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Update markers and route whenever pickup/destination changes
+  // Update markers and route whenever pickup/destination/map changes
   useEffect(() => {
-    const map = mapRef.current;
     if (!map) return;
 
     // Remove old markers
@@ -196,7 +195,7 @@ export default function RideMap({ pickup, destination, center = DEFAULT_CENTER }
     } else {
       updateRoute([]);
     }
-  }, [pickup, destination]);
+  }, [map, pickup, destination]);
 
   return (
     <div className="relative w-full h-full rounded-[28px_10px_24px_12px/12px_24px_10px_28px] overflow-hidden border-[2.5px] border-ink" style={{ boxShadow: "6px 6px 0 #1B1B1F" }}>
