@@ -151,12 +151,21 @@ export async function GET() {
     ? Array.from(new Set(ridesRes.data.map((r) => r.driver_id).filter(Boolean)))
     : [];
 
-  const driversMap: Record<string, { name?: string | null; rating?: number | null; vehicle_type?: string | null; is_approved?: boolean | null }> = {};
+  const driversMap: Record<
+    string,
+    {
+      name?: string | null;
+      rating?: number | null;
+      vehicle_type?: string | null;
+      is_approved?: boolean | null;
+      driver_vehicles?: Array<{ vehicle_number: string }>;
+    }
+  > = {};
 
   if (driverIds.length > 0) {
     const { data: driversData } = await supabase
       .from("drivers")
-      .select("user_id, name, rating, vehicle_type, is_approved")
+      .select("user_id, name:full_name, rating, vehicle_type, is_approved, driver_vehicles(vehicle_number)")
       .in("user_id", driverIds);
 
     if (Array.isArray(driversData)) {
@@ -170,6 +179,11 @@ export async function GET() {
     ? ridesRes.data.map((ride) => {
         const row = ride as Record<string, unknown>;
         const driverRow = row.driver_id ? driversMap[row.driver_id as string] : null;
+        const driverVehicles = driverRow?.driver_vehicles;
+        const vehicleNo = Array.isArray(driverVehicles) && driverVehicles.length > 0
+          ? driverVehicles[0].vehicle_number
+          : null;
+
         return {
           id: String(row.id ?? ""),
           status: String(row.status ?? "unknown"),
@@ -197,7 +211,7 @@ export async function GET() {
             name: typeof driverRow.name === "string" ? driverRow.name : null,
             rating: toNumber(driverRow.rating),
             vehicle: typeof driverRow.vehicle_type === "string" ? driverRow.vehicle_type : null,
-            plate: null,
+            plate: vehicleNo,
             trusted: Boolean(driverRow.is_approved),
             color: null,
           } : null,
@@ -207,7 +221,7 @@ export async function GET() {
 
   const driversRes = await supabase
     .from("drivers")
-    .select("user_id, name, rating, vehicle_type, vehicle_no, is_approved, is_available")
+    .select("user_id, name:full_name, rating, vehicle_type, is_approved, is_available, driver_vehicles(vehicle_number)")
     .eq("is_available", true)
     .eq("is_approved", true)
     .limit(6);
@@ -215,12 +229,17 @@ export async function GET() {
   const drivers: StudentDriver[] = Array.isArray(driversRes.data)
     ? driversRes.data.map((driver) => {
         const row = driver as Record<string, unknown>;
+        const driverVehicles = row.driver_vehicles;
+        const vehicleNo = Array.isArray(driverVehicles) && driverVehicles.length > 0
+          ? (driverVehicles[0] as Record<string, unknown>).vehicle_number
+          : null;
+
         return {
           id: String(row.user_id ?? ""),
           name: typeof row.name === "string" ? row.name : null,
           rating: toNumber(row.rating),
           vehicleType: typeof row.vehicle_type === "string" ? row.vehicle_type : null,
-          vehicleNo: typeof row.vehicle_no === "string" ? row.vehicle_no : null,
+          vehicleNo: typeof vehicleNo === "string" ? vehicleNo : null,
           isTrusted: Boolean(row.is_approved),
         };
       })
