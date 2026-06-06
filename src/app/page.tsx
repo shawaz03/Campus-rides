@@ -6,6 +6,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
+import { cn } from "@/lib/utils";
 import {
   CarMascot, CloudDoodle, SunDoodle, StarDoodle, BlobDoodle,
   SquiggleDoodle, ArrowDoodle, PinDoodle, CoinDoodle, HeartDoodle,
@@ -513,12 +514,10 @@ const FAQ = () => {
 const Join = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [sent, setSent] = useState(false);
-  const ticketIdRef = useRef("");
-
-  useEffect(() => {
-    ticketIdRef.current = `CR-${Math.floor(1000 + Math.random() * 9000)}`;
-  }, []);
+  const [ticketId, setTicketId] = useState("");
 
   const getCampus = (emailStr: string) => {
     try {
@@ -533,6 +532,35 @@ const Join = () => {
     } catch {
       return "Campus";
     }
+  };
+
+  const validateForm = () => {
+    let isValid = true;
+    if (!name.trim()) {
+      setNameError("Name is required");
+      isValid = false;
+    } else if (name.trim().length < 2) {
+      setNameError("Name must be at least 2 characters");
+      isValid = false;
+    } else if (!/^[A-Za-z\s.'-]+$/.test(name.trim())) {
+      setNameError("Name can only contain letters, spaces, and standard punctuation");
+      isValid = false;
+    } else {
+      setNameError("");
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email.trim()) {
+      setEmailError("Email is required");
+      isValid = false;
+    } else if (!emailRegex.test(email.trim())) {
+      setEmailError("Please enter a valid email address");
+      isValid = false;
+    } else {
+      setEmailError("");
+    }
+
+    return isValid;
   };
 
   return (
@@ -563,31 +591,59 @@ const Join = () => {
               </p>
 
               <form
-                onSubmit={(e) => { e.preventDefault(); if (name && email) setSent(true); }}
-                className="mt-9 flex flex-col sm:flex-row gap-4 items-center justify-center"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (validateForm()) {
+                    setTicketId(`CR-${Math.floor(1000 + Math.random() * 9000)}`);
+                    setSent(true);
+                  }
+                }}
+                className="mt-9 flex flex-col sm:flex-row gap-4 items-start justify-center"
                 data-testid="join-form"
               >
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  type="text"
-                  required
-                  placeholder="Your Name"
-                  data-testid="join-name"
-                  className="w-full sm:w-[200px] px-5 py-3 font-hand text-xl bg-cream border-[2.5px] border-ink rounded-[10px_36px_8px_40px/40px_8px_36px_10px] focus:outline-none focus:ring-0"
-                  style={{ boxShadow: "4px 4px 0 #1B1B1F" }}
-                />
-                <input
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  type="email"
-                  required
-                  placeholder="you@yourcollege.edu"
-                  data-testid="join-email"
-                  className="w-full sm:w-[280px] px-5 py-3 font-hand text-xl bg-cream border-[2.5px] border-ink rounded-[40px_8px_36px_10px/10px_36px_8px_40px] focus:outline-none focus:ring-0"
-                  style={{ boxShadow: "4px 4px 0 #1B1B1F" }}
-                />
-                <button type="submit" className="sketch-btn sketch-btn--tomato" data-testid="join-submit">
+                <div className="w-full sm:w-auto flex flex-col items-start min-h-[75px]">
+                  <input
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (nameError) setNameError("");
+                    }}
+                    type="text"
+                    required
+                    placeholder="Your Name"
+                    data-testid="join-name"
+                    className={cn(
+                      "w-full sm:w-[200px] px-5 py-3 font-hand text-xl bg-cream border-[2.5px] rounded-[10px_36px_8px_40px/40px_8px_36px_10px] focus:outline-none focus:ring-0",
+                      nameError ? "border-tomato" : "border-ink"
+                    )}
+                    style={{ boxShadow: "4px 4px 0 #1B1B1F" }}
+                  />
+                  {nameError && (
+                    <span className="font-hand text-sm text-tomato mt-1.5 pl-1 block text-left">{nameError}</span>
+                  )}
+                </div>
+                <div className="w-full sm:w-auto flex flex-col items-start min-h-[75px]">
+                  <input
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailError) setEmailError("");
+                    }}
+                    type="email"
+                    required
+                    placeholder="you@yourcollege.edu"
+                    data-testid="join-email"
+                    className={cn(
+                      "w-full sm:w-[280px] px-5 py-3 font-hand text-xl bg-cream border-[2.5px] rounded-[40px_8px_36px_10px/10px_36px_8px_40px] focus:outline-none focus:ring-0",
+                      emailError ? "border-tomato" : "border-ink"
+                    )}
+                    style={{ boxShadow: "4px 4px 0 #1B1B1F" }}
+                  />
+                  {emailError && (
+                    <span className="font-hand text-sm text-tomato mt-1.5 pl-1 block text-left">{emailError}</span>
+                  )}
+                </div>
+                <button type="submit" className="sketch-btn sketch-btn--tomato mt-[2px]" data-testid="join-submit">
                   Hop In <ArrowDoodle className="w-7 h-5" color="#fff" />
                 </button>
               </form>
@@ -607,6 +663,8 @@ const Join = () => {
                   setSent(false);
                   setName("");
                   setEmail("");
+                  setNameError("");
+                  setEmailError("");
                 }}
                 className="absolute -top-3.5 -right-3.5 w-9 h-9 rounded-full border-[2.5px] border-ink bg-[#FF5A36] hover:bg-tomato text-cream flex items-center justify-center font-marker text-xl transition-transform hover:scale-110 active:scale-95 cursor-pointer z-20"
                 style={{ boxShadow: "2.5px 2.5px 0 #1B1B1F" }}
@@ -644,7 +702,7 @@ const Join = () => {
                 <div>
                   <span className="font-scribble text-sm text-tomato block">TICKET NUMBER</span>
                   <div className="inline-block bg-[#5BC0EB]/30 border-[1.5px] border-ink px-4 py-2 font-hand text-xl mt-1 select-all rotate-[1deg]" style={{ boxShadow: "3px 3px 0 #1B1B1F" }}>
-                    {ticketIdRef.current || "CR-7749"}
+                    {ticketId || "CR-7749"}
                   </div>
                 </div>
 

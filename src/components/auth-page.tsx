@@ -292,6 +292,8 @@ export default function AuthPage() {
   const [isOAuthLoading, setIsOAuthLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [formNotice, setFormNotice] = useState<string | null>(null);
 
@@ -319,6 +321,8 @@ export default function AuthPage() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setFormError(null);
     setFormNotice(null);
+    setEmailError(null);
+    setPasswordError(null);
   }, [role]);
 
   const destination = role === "driver" ? "/driver" : "/student";
@@ -327,6 +331,8 @@ export default function AuthPage() {
     if (isOAuthLoading) return;
     setFormError(null);
     setFormNotice(null);
+    setEmailError(null);
+    setPasswordError(null);
     setIsOAuthLoading(true);
     const origin = window.location.origin;
     const redirectTo = `${origin}/auth/callback?next=${encodeURIComponent(destination)}`;
@@ -342,19 +348,48 @@ export default function AuthPage() {
     }
   };
 
+  const validateAuthForm = () => {
+    let isValid = true;
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      setEmailError("Email is required.");
+      isValid = false;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setEmailError("Please enter a valid email address.");
+      isValid = false;
+    } else {
+      setEmailError(null);
+    }
+
+    if (!password) {
+      setPasswordError("Password is required.");
+      isValid = false;
+    } else if (password.length < 6) {
+      setPasswordError("Password must be at least 6 characters.");
+      isValid = false;
+    } else {
+      setPasswordError(null);
+    }
+
+    return isValid;
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isSubmitting || isOAuthLoading) return;
-    setIsSubmitting(true);
+
     setFormError(null);
     setFormNotice(null);
+    setEmailError(null);
+    setPasswordError(null);
 
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail || !password) {
-      setFormError("Email and password are required.");
-      setIsSubmitting(false);
+    if (!validateAuthForm()) {
       return;
     }
+
+    setIsSubmitting(true);
+    const trimmedEmail = email.trim();
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -486,17 +521,26 @@ export default function AuthPage() {
                           autoComplete="email"
                           placeholder={isStudent ? "you@college.edu" : "driver@campus.in"}
                           value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            if (emailError) setEmailError(null);
+                          }}
                           data-testid="auth-email-input"
-                          className="w-full pl-12 pr-4 py-3 font-hand text-lg focus:outline-none"
+                          className={cn(
+                            "w-full pl-12 pr-4 py-3 font-hand text-lg focus:outline-none",
+                            emailError ? "border-tomato" : ""
+                          )}
                           style={{
                             background: "#FDF6E3",
-                            border: "2.5px solid #1B1B1F",
+                            border: emailError ? "2.5px solid #FF5A36" : "2.5px solid #1B1B1F",
                             borderRadius: "40px 8px 36px 10px / 10px 36px 8px 40px",
                             boxShadow: "4px 4px 0 #1B1B1F",
                           }}
                         />
                       </div>
+                      {emailError && (
+                        <p className="font-hand text-sm text-tomato pl-1">{emailError}</p>
+                      )}
                     </div>
 
                     {/* Password */}
@@ -511,12 +555,18 @@ export default function AuthPage() {
                           autoComplete="current-password"
                           placeholder="••••••••"
                           value={password}
-                          onChange={(e) => setPassword(e.target.value)}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            if (passwordError) setPasswordError(null);
+                          }}
                           data-testid="auth-password-input"
-                          className="w-full pl-12 pr-12 py-3 font-hand text-lg focus:outline-none"
+                          className={cn(
+                            "w-full pl-12 pr-12 py-3 font-hand text-lg focus:outline-none",
+                            passwordError ? "border-tomato" : ""
+                          )}
                           style={{
                             background: "#FDF6E3",
-                            border: "2.5px solid #1B1B1F",
+                            border: passwordError ? "2.5px solid #FF5A36" : "2.5px solid #1B1B1F",
                             borderRadius: "10px 36px 8px 40px / 40px 8px 36px 10px",
                             boxShadow: "4px 4px 0 #1B1B1F",
                           }}
@@ -531,6 +581,9 @@ export default function AuthPage() {
                           {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                         </button>
                       </div>
+                      {passwordError && (
+                        <p className="font-hand text-sm text-tomato pl-1">{passwordError}</p>
+                      )}
                     </div>
 
                     {formError && (

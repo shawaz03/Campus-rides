@@ -186,7 +186,14 @@ function PlacePicker({
               <input
                 autoFocus
                 value={q}
-                onChange={(e) => setQ(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val.length <= 100) {
+                    if (/^[a-zA-Z0-9\s,.\-()/'"]*$/.test(val) || val === "") {
+                      setQ(val);
+                    }
+                  }
+                }}
                 placeholder="search a place…"
                 className="flex-1 bg-transparent outline-none font-hand"
               />
@@ -283,6 +290,30 @@ export default function BookRidePage() {
       setBooking("idle");
       setBookingError("Please sign in to request a ride.");
       return;
+    }
+
+    if (scheduled) {
+      if (!scheduledFor) {
+        setBooking("idle");
+        setBookingError("Please select a date and time for the scheduled ride.");
+        return;
+      }
+      
+      const scheduledTime = new Date(scheduledFor).getTime();
+      const now = Date.now();
+      const fiveMinutes = 5 * 60 * 1000;
+      const twentyFourHours = 24 * 60 * 60 * 1000;
+
+      if (scheduledTime < now + fiveMinutes) {
+        setBooking("idle");
+        setBookingError("Scheduled time must be at least 5 minutes in the future.");
+        return;
+      }
+      if (scheduledTime > now + twentyFourHours) {
+        setBooking("idle");
+        setBookingError("Rides can only be scheduled up to 24 hours in advance.");
+        return;
+      }
     }
 
     const durationMinutes = Math.max(

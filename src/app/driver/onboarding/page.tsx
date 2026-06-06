@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo, useState, useEffect, type ChangeEvent, type CSSProperties } from "react";
+import { useMemo, useState, useEffect, type ChangeEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -108,7 +107,7 @@ const STEP_COPY: Record<
   },
 };
 
-const vehicleCardVariants: any = {
+const vehicleCardVariants: Variants = {
   initial: (index: number) => ({
     opacity: 0,
     y: 12,
@@ -194,7 +193,6 @@ function VehicleCard({ vehicle, selected, index, onSelect }: VehicleCardProps) {
 }
 
 export default function DriverOnboardingPage() {
-  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
 
   const [userId, setUserId] = useState<string | null>(null);
@@ -223,6 +221,14 @@ export default function DriverOnboardingPage() {
   const [upiQr, setUpiQr] = useState<File | null>(null);
   const [payoutSubmitted, setPayoutSubmitted] = useState(false);
   const [payoutModalOpen, setPayoutModalOpen] = useState(false);
+
+  // Validation errors state
+  const [vehicleNumberError, setVehicleNumberError] = useState("");
+  const [vehicleModelError, setVehicleModelError] = useState("");
+  const [accountHolderError, setAccountHolderError] = useState("");
+  const [accountNumberError, setAccountNumberError] = useState("");
+  const [ifscError, setIfscError] = useState("");
+  const [upiIdError, setUpiIdError] = useState("");
 
   // Load existing profile & documents
   useEffect(() => {
@@ -338,14 +344,130 @@ export default function DriverOnboardingPage() {
 
   const handleFileChange = (key: DocKey) => (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
+    if (file) {
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+      if (!allowedTypes.includes(file.type)) {
+        setSubmitError(`Invalid file format for ${key}. Only images and PDFs are allowed.`);
+        event.target.value = "";
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setSubmitError(`File size for ${key} exceeds 5MB limit.`);
+        event.target.value = "";
+        return;
+      }
+      setSubmitError(null);
+    }
     setDocs((prev) => ({ ...prev, [key]: file }));
   };
 
   const handleUpiQrChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] ?? null;
+    if (file) {
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        setSubmitError("Invalid format for UPI QR. Only images are allowed.");
+        event.target.value = "";
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setSubmitError("UPI QR file size exceeds 5MB limit.");
+        event.target.value = "";
+        return;
+      }
+      setSubmitError(null);
+    }
     setUpiQr(file);
     setPayoutSubmitted(false);
     setPayoutModalOpen(false);
+  };
+
+  const handleVehicleNext = () => {
+    let isValid = true;
+    
+    // Validate Vehicle Number
+    const vehNumClean = vehicleNumber.trim().replace(/\s+/g, "").toUpperCase();
+    const stdRegex = /^[A-Z]{2}[0-9]{1,2}[A-Z]{0,3}[0-9]{4}$/;
+    if (!vehicleNumber.trim()) {
+      setVehicleNumberError("Vehicle number is required");
+      isValid = false;
+    } else if (!stdRegex.test(vehNumClean)) {
+      setVehicleNumberError("Enter a valid Indian vehicle number (e.g., TS 09 AB 1234)");
+      isValid = false;
+    } else {
+      setVehicleNumberError("");
+    }
+
+    // Validate Vehicle Model
+    if (!vehicleModel.trim()) {
+      setVehicleModelError("Vehicle model is required");
+      isValid = false;
+    } else if (vehicleModel.trim().length < 3) {
+      setVehicleModelError("Vehicle model must be at least 3 characters");
+      isValid = false;
+    } else {
+      setVehicleModelError("");
+    }
+
+    if (isValid) {
+      setStep("docs");
+    }
+  };
+
+  const handlePayoutSubmitWithValidation = async () => {
+    let isValid = true;
+
+    // Validate Account Holder Name
+    if (!accountHolderName.trim()) {
+      setAccountHolderError("Account holder name is required");
+      isValid = false;
+    } else if (accountHolderName.trim().length < 3) {
+      setAccountHolderError("Name must be at least 3 characters");
+      isValid = false;
+    } else if (!/^[A-Za-z\s]+$/.test(accountHolderName.trim())) {
+      setAccountHolderError("Name can only contain letters and spaces");
+      isValid = false;
+    } else {
+      setAccountHolderError("");
+    }
+
+    // Validate Account Number
+    if (!accountNumber.trim()) {
+      setAccountNumberError("Account number is required");
+      isValid = false;
+    } else if (!/^[0-9]{9,18}$/.test(accountNumber.trim())) {
+      setAccountNumberError("Enter a valid bank account number (9 to 18 digits)");
+      isValid = false;
+    } else {
+      setAccountNumberError("");
+    }
+
+    // Validate IFSC Code
+    const cleanIfsc = ifscCode.trim().toUpperCase();
+    if (!ifscCode.trim()) {
+      setIfscError("IFSC code is required");
+      isValid = false;
+    } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(cleanIfsc)) {
+      setIfscError("Enter a valid 11-character IFSC code (e.g., HDFC0001234)");
+      isValid = false;
+    } else {
+      setIfscError("");
+    }
+
+    // Validate UPI ID
+    if (!upiId.trim()) {
+      setUpiIdError("UPI ID is required");
+      isValid = false;
+    } else if (!/^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/.test(upiId.trim())) {
+      setUpiIdError("Enter a valid UPI ID (e.g., username@bank)");
+      isValid = false;
+    } else {
+      setUpiIdError("");
+    }
+
+    if (isValid) {
+      await handlePayoutSubmit();
+    }
   };
 
   const handleDocSubmit = async () => {
@@ -437,9 +559,10 @@ export default function DriverOnboardingPage() {
       setUploadedDocs(newUploaded);
 
       setDocsSubmitted(true);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setSubmitError(err.message || "Failed to submit documents. Please try again.");
+      const errMsg = err instanceof Error ? err.message : "Failed to submit documents. Please try again.";
+      setSubmitError(errMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -530,9 +653,10 @@ export default function DriverOnboardingPage() {
 
       setPayoutSubmitted(true);
       setPayoutModalOpen(true);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setSubmitError(err.message || "Failed to submit payout details. Please try again.");
+      const errMsg = err instanceof Error ? err.message : "Failed to submit payout details. Please try again.";
+      setSubmitError(errMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -649,19 +773,37 @@ export default function DriverOnboardingPage() {
                       <span className="font-hand text-base">Vehicle number</span>
                       <input
                         value={vehicleNumber}
-                        onChange={(event) => setVehicleNumber(event.target.value)}
+                        onChange={(event) => {
+                          setVehicleNumber(event.target.value);
+                          if (vehicleNumberError) setVehicleNumberError("");
+                        }}
                         placeholder="TS 09 AB 1234"
-                        className="mt-2 w-full px-4 py-3 font-hand text-lg bg-cream border-[2.5px] border-ink rounded-[40px_8px_36px_10px/10px_36px_8px_40px] focus:outline-none"
+                        className={cn(
+                          "mt-2 w-full px-4 py-3 font-hand text-lg bg-cream border-[2.5px] rounded-[40px_8px_36px_10px/10px_36px_8px_40px] focus:outline-none",
+                          vehicleNumberError ? "border-tomato" : "border-ink"
+                        )}
                       />
+                      {vehicleNumberError && (
+                        <p className="mt-1.5 font-hand text-sm text-tomato">{vehicleNumberError}</p>
+                      )}
                     </label>
                     <label className="block">
                       <span className="font-hand text-base">Vehicle model</span>
                       <input
                         value={vehicleModel}
-                        onChange={(event) => setVehicleModel(event.target.value)}
+                        onChange={(event) => {
+                          setVehicleModel(event.target.value);
+                          if (vehicleModelError) setVehicleModelError("");
+                        }}
                         placeholder="Bajaj RE Auto"
-                        className="mt-2 w-full px-4 py-3 font-hand text-lg bg-cream border-[2.5px] border-ink rounded-[10px_36px_8px_40px/40px_8px_36px_10px] focus:outline-none"
+                        className={cn(
+                          "mt-2 w-full px-4 py-3 font-hand text-lg bg-cream border-[2.5px] rounded-[10px_36px_8px_40px/40px_8px_36px_10px] focus:outline-none",
+                          vehicleModelError ? "border-tomato" : "border-ink"
+                        )}
                       />
+                      {vehicleModelError && (
+                        <p className="mt-1.5 font-hand text-sm text-tomato">{vehicleModelError}</p>
+                      )}
                     </label>
                   </div>
                 </div>
@@ -677,7 +819,7 @@ export default function DriverOnboardingPage() {
                   <div className="mt-6">
                     <button
                       type="button"
-                      onClick={() => setStep("docs")}
+                      onClick={handleVehicleNext}
                       disabled={!canContinue}
                       className="sketch-btn sketch-btn--tomato disabled:opacity-50 disabled:cursor-not-allowed"
                       data-testid="driver-next"
@@ -834,10 +976,17 @@ export default function DriverOnboardingPage() {
                           setAccountHolderName(event.target.value);
                           setPayoutSubmitted(false);
                           setPayoutModalOpen(false);
+                          if (accountHolderError) setAccountHolderError("");
                         }}
                         placeholder="Riya Sharma"
-                        className="mt-2 w-full px-4 py-3 font-hand text-lg bg-cream border-[2.5px] border-ink rounded-[34px_10px_28px_12px/12px_28px_10px_34px] focus:outline-none"
+                        className={cn(
+                          "mt-2 w-full px-4 py-3 font-hand text-lg bg-cream border-[2.5px] rounded-[34px_10px_28px_12px/12px_28px_10px_34px] focus:outline-none",
+                          accountHolderError ? "border-tomato" : "border-ink"
+                        )}
                       />
+                      {accountHolderError && (
+                        <p className="mt-1.5 font-hand text-sm text-tomato">{accountHolderError}</p>
+                      )}
                     </label>
                     <label className="block">
                       <span className="font-hand text-base">Bank account number</span>
@@ -847,11 +996,18 @@ export default function DriverOnboardingPage() {
                           setAccountNumber(event.target.value);
                           setPayoutSubmitted(false);
                           setPayoutModalOpen(false);
+                          if (accountNumberError) setAccountNumberError("");
                         }}
                         inputMode="numeric"
                         placeholder="091234567890"
-                        className="mt-2 w-full px-4 py-3 font-hand text-lg bg-cream border-[2.5px] border-ink rounded-[10px_36px_8px_40px/40px_8px_36px_10px] focus:outline-none"
+                        className={cn(
+                          "mt-2 w-full px-4 py-3 font-hand text-lg bg-cream border-[2.5px] rounded-[10px_36px_8px_40px/40px_8px_36px_10px] focus:outline-none",
+                          accountNumberError ? "border-tomato" : "border-ink"
+                        )}
                       />
+                      {accountNumberError && (
+                        <p className="mt-1.5 font-hand text-sm text-tomato">{accountNumberError}</p>
+                      )}
                     </label>
                     <label className="block">
                       <span className="font-hand text-base">IFSC code</span>
@@ -861,10 +1017,17 @@ export default function DriverOnboardingPage() {
                           setIfscCode(event.target.value);
                           setPayoutSubmitted(false);
                           setPayoutModalOpen(false);
+                          if (ifscError) setIfscError("");
                         }}
                         placeholder="HDFC0001234"
-                        className="mt-2 w-full px-4 py-3 font-hand text-lg bg-cream border-[2.5px] border-ink rounded-[40px_8px_36px_10px/10px_36px_8px_40px] focus:outline-none"
+                        className={cn(
+                          "mt-2 w-full px-4 py-3 font-hand text-lg bg-cream border-[2.5px] rounded-[40px_8px_36px_10px/10px_36px_8px_40px] focus:outline-none",
+                          ifscError ? "border-tomato" : "border-ink"
+                        )}
                       />
+                      {ifscError && (
+                        <p className="mt-1.5 font-hand text-sm text-tomato">{ifscError}</p>
+                      )}
                     </label>
                   </div>
                 </motion.div>
@@ -896,10 +1059,17 @@ export default function DriverOnboardingPage() {
                           setUpiId(event.target.value);
                           setPayoutSubmitted(false);
                           setPayoutModalOpen(false);
+                          if (upiIdError) setUpiIdError("");
                         }}
                         placeholder="riya@upi"
-                        className="mt-2 w-full px-4 py-3 font-hand text-lg bg-cream border-[2.5px] border-ink rounded-[10px_36px_8px_40px/40px_8px_36px_10px] focus:outline-none"
+                        className={cn(
+                          "mt-2 w-full px-4 py-3 font-hand text-lg bg-cream border-[2.5px] rounded-[10px_36px_8px_40px/40px_8px_36px_10px] focus:outline-none",
+                          upiIdError ? "border-tomato" : "border-ink"
+                        )}
                       />
+                      {upiIdError && (
+                        <p className="mt-1.5 font-hand text-sm text-tomato">{upiIdError}</p>
+                      )}
                     </label>
                     <div>
                       <input
@@ -963,7 +1133,7 @@ export default function DriverOnboardingPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={handlePayoutSubmit}
+                      onClick={handlePayoutSubmitWithValidation}
                       disabled={!payoutReady || isSubmitting}
                       className="sketch-btn sketch-btn--tomato disabled:opacity-50 disabled:cursor-not-allowed"
                     >
