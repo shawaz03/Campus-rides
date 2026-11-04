@@ -26,30 +26,7 @@ export default function RideMap({ pickup, destination, center = DEFAULT_CENTER }
 
       const activeMap = new maplibre.Map({
         container: containerRef.current,
-        style: {
-          version: 8,
-          sources: {
-            "carto-light": {
-              type: "raster",
-              tiles: [
-                "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
-                "https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
-                "https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
-              ],
-              tileSize: 256,
-              attribution: "© OpenStreetMap © CARTO",
-            },
-          },
-          layers: [
-            {
-              id: "background",
-              type: "raster",
-              source: "carto-light",
-              minzoom: 0,
-              maxzoom: 22,
-            },
-          ],
-        },
+        style: "https://tiles.openfreemap.org/styles/bright",
         center: center,
         zoom: 12,
       });
