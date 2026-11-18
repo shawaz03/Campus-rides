@@ -70,9 +70,18 @@ export default function StudentSidebar() {
   const displayFirst = getDisplayName(name, email);
 
   const handleSignOut = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/auth");
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      if (typeof window !== "undefined") {
+        sessionStorage.clear();
+      }
+    } catch (err) {
+      console.error("Sign out error:", err);
+    } finally {
+      // Replace history state so back-button/swipe cannot navigate back to dashboard
+      window.location.replace("/auth");
+    }
   };
 
   return (

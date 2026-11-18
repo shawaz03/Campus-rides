@@ -3,7 +3,12 @@ import type { StudentApiResponse } from "@/lib/student-types";
 
 async function fetchStudent(): Promise<StudentApiResponse | null> {
   const res = await fetch("/api/student", { cache: "no-store" });
-  if (res.status === 401) return null;
+  if (res.status === 401) {
+    if (typeof window !== "undefined") {
+      window.location.replace("/auth");
+    }
+    return null;
+  }
   if (!res.ok) {
     throw new Error("Failed to load student data");
   }
